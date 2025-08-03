@@ -17,6 +17,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     public GameObject playerFramePrefab;           // Prefab für die Spieler-Kachel (mit Namen, Punkten etc.)
     public Button glassButton;                      // Button/Image für das Glas (zentral auf dem Bildschirm)
     public GameObject aufgabenfeldPrefab;     // Dein Aufgabenfeld Prefab zum Instanziieren
+    public TMP_Text textBarName;            // Barname - Schild
 
 
     // Verknüpft jeden Spieler (über dessen ActorNumber) mit seinem PlayerFrame im UI
@@ -27,6 +28,8 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     /// </summary>
     void Start()
     {
+        textBarName.text = PhotonNetwork.CurrentRoom.Name;
+
         // Canvas finden – automatisch oder über eine UI-"Tag"-Logik
         var canvas = FindFirstObjectByType<Canvas>();
         if (canvas != null && aufgabenfeldPrefab != null)
