@@ -34,13 +34,12 @@ MonoBehaviour:
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
+  - AddRoundPointsToTotalForAllRPC
   - ClickRpc
   - DestroyRpc
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
-  - AddPointRPC
-  - AddRoundPointsToTotalForAllRPC
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

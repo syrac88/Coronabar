@@ -153,7 +153,7 @@ MonoBehaviour:
   playerFramePrefab: {fileID: 5766247161574293689, guid: cc3b0451b1bb9fe44a1b1f75869e4d98, type: 3}
   glassButton: {fileID: 669560045}
   aufgabenfeldPrefab: {fileID: 3299183260269937395, guid: 2bb9f2536c8dbf14a837a09ec2488575, type: 3}
-  aufgabenDatenbank: {fileID: 11400000, guid: 81ff57981cf07fd4c9faa350a270d5ca, type: 2}
+  aufgabenDatenbank: {fileID: 11400000, guid: 763ce69804df3714da8846aea27d99d4, type: 2}
 --- !u!4 &127997696
 Transform:
   m_ObjectHideFlags: 0

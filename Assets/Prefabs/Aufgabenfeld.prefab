@@ -96,7 +96,7 @@ MonoBehaviour:
   buttonAufgabe: {fileID: 8663084710592478609}
   textAufgabe: {fileID: 8975778248605308929}
   buttonErledigt: {fileID: 4705660772858727225}
-  aufgabenDatenbank: {fileID: 11400000, guid: 81ff57981cf07fd4c9faa350a270d5ca, type: 2}
+  aufgabenDatenbank: {fileID: 11400000, guid: 763ce69804df3714da8846aea27d99d4, type: 2}
 --- !u!1 &3860731943976413300
 GameObject:
   m_ObjectHideFlags: 0
