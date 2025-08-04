@@ -4,6 +4,8 @@ using Photon.Realtime;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
+using ExitGames.Client.Photon;
+
 
 public class LobbyManager : MonoBehaviourPunCallbacks
 {
@@ -17,6 +19,10 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     public GameObject roomButtonPrefab;         // Prefab für die einzelnen Raum-Buttons in der Liste
 
     private string currentRoomName;              // Aktueller Raum-Name, der betreten/erstellt wird
+
+    public List<Sprite> charakterSprites;   // Alle verfügbaren Sprites (im Inspector per Drag&Drop anfügen)
+    public Image previewImage;               // Das Image im UI, das die Vorschau anzeigt
+    private int selectedIndex = 0;
 
     // Cache für alle aktuellen Rauminfos, da Photon nur Updatelisten liefert (Deltas)
     private Dictionary<string, RoomInfo> cachedRoomList = new Dictionary<string, RoomInfo>();
@@ -35,6 +41,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         buttonEnterRoom.interactable = false;
         PhotonNetwork.ConnectUsingSettings();
         buttonEnterRoom.onClick.AddListener(OnEnterRoomClicked);
+        UpdatePreview();
     }
 
     /// <summary>
@@ -79,6 +86,9 @@ public class LobbyManager : MonoBehaviourPunCallbacks
             // Raumname darf nicht leer sein
             return;
         }
+
+        // Charakter Speichern
+        ConfirmSelection();
 
         // Wenn verbunden, versuche Raum zu joinen
         if (PhotonNetwork.IsConnectedAndReady)
@@ -191,5 +201,36 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     {
         inputRoomName.text = roomName;
         OnEnterRoomClicked();
+    }
+
+    public void NextCharakter()
+    {
+        selectedIndex = (selectedIndex + 1) % charakterSprites.Count;
+        UpdatePreview();
+    }
+
+    public void PreviousCharakter()
+    {
+        selectedIndex = (selectedIndex - 1 + charakterSprites.Count) % charakterSprites.Count;
+        UpdatePreview();
+    }
+
+    private void UpdatePreview()
+    {
+        previewImage.sprite = charakterSprites[selectedIndex];
+    }
+
+    public void ConfirmSelection()
+    {
+        // Angenommen, selectedIndex enthält deinen aktuellen Sprite/Charakter-Index
+
+        // 1. Charakter-ID als Custom Property setzen
+        Hashtable props = new Hashtable
+        {
+            { "CharakterID", selectedIndex }
+        };
+
+        PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+
     }
 }
