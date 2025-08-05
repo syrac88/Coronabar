@@ -215,6 +215,18 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         UpdatePreview();
     }
 
+    public void RandomCharakter()
+    {
+        if (charakterSprites.Count == 0)
+            return;
+
+        // Zufälligen Index wählen, der (falls du nicht den aktuellen willst) nicht selectedIndex sein muss:
+        int randomIndex = Random.Range(0, charakterSprites.Count);
+        selectedIndex = randomIndex;
+        UpdatePreview();
+    }
+
+
     private void UpdatePreview()
     {
         previewImage.sprite = charakterSprites[selectedIndex];

@@ -46,7 +46,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
         string taskStatus = props.ContainsKey(KEY_STATUS) ? (string)props[KEY_STATUS] : "waiting";
 
         Player ownerPlayer = PhotonNetwork.CurrentRoom.GetPlayer(taskOwner);
-        textBesitzer.text = ownerPlayer != null ? ownerPlayer.NickName : "N/A";
+        textBesitzer.text = (ownerPlayer != null ? ownerPlayer.NickName : "N/A") + "'s Aufgabe:";
 
         bool iAmOwner = PhotonNetwork.LocalPlayer.ActorNumber == taskOwner;
 

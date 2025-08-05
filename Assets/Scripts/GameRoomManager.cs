@@ -15,9 +15,9 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     [Header("UI")]
     public Transform playerListParent;             // UI-Container mit Horizontal Layout Group für die PlayerFrames
     public GameObject playerFramePrefab;           // Prefab für die Spieler-Kachel (mit Namen, Punkten etc.)
-    public Button glassButton;                      // Button/Image für das Glas (zentral auf dem Bildschirm)
     public GameObject aufgabenfeldPrefab;     // Dein Aufgabenfeld Prefab zum Instanziieren
     public TMP_Text textBarName;            // Barname - Schild
+    public Sprite[] charakterSprites;
 
 
     // Verknüpft jeden Spieler (über dessen ActorNumber) mit seinem PlayerFrame im UI
@@ -60,8 +60,6 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
             UpdatePointsUI(player.ActorNumber, GetPlayerPoints(player));
         }
 
-        if (glassButton != null)
-            glassButton.onClick.AddListener(OnGlassClicked);
     }
 
     public void AddRoundPointsToTotalForAll()
@@ -147,19 +145,44 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
             return; // Vermeide Doppel-Frames
 
         GameObject frame = Instantiate(playerFramePrefab, playerListParent);
-
-        // Name eintragen
-        var nameText = frame.transform.Find("Text_Name")?.GetComponent<TMP_Text>();
-        if (nameText != null)
-            nameText.text = player.NickName;
-
-        // Punktefeld initialisieren mit 0 - wird später via UpdatePointsUI aktualisiert
-        var pointsText = frame.transform.Find("Text_PointsRound")?.GetComponent<TMP_Text>();
-        if (pointsText != null)
-            pointsText.text = "0";
-
         playerFrames[player.ActorNumber] = frame;
+
+        // Zugriff auf das PlayerFrameBehaviour-Script im Prefab
+        var frameBehaviour = frame.GetComponent<PlayerFrameBehaviour>();
+        if (frameBehaviour != null)
+        {
+            // Setze ActorNumber für Erkennung durch PlayerFrameBehaviour (wichtig für lokalen Spieler)
+            frameBehaviour.actorNumber = player.ActorNumber;
+
+            // Name
+            if (frameBehaviour.nameText != null)
+                frameBehaviour.nameText.text = player.NickName;
+
+            // Punktezähler
+            if (frameBehaviour.pointsText != null)
+                frameBehaviour.pointsText.text = "0";
+
+            // Charakterbild
+            if (player.CustomProperties.TryGetValue("CharakterID", out object charIDObj))
+            {
+                int charID = (int)charIDObj;
+                if (frameBehaviour.imagePlayer != null && charakterSprites != null && charID >= 0 && charID < charakterSprites.Length)
+                {
+                    frameBehaviour.imagePlayer.sprite = charakterSprites[charID];
+                }
+            }
+
+            // Gesamt-Punkte ggf. auch direkt setzen (optional)
+            // if (frameBehaviour.totalPointsText != null) frameBehaviour.totalPointsText.text = "0";
+        }
+        else
+        {
+            Debug.LogWarning("PlayerFrameBehaviour im Prefab ist nicht gesetzt!");
+        }
+
+        ArrangePlayerFrames();
     }
+
 
     /// <summary>
     /// Holt die Punkte eines Spielers aus dessen Custom Properties.
@@ -180,17 +203,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     /// Wird beim Klick auf das Glas ausgeführt.
     /// Erhöht den Punktestand des lokalen Spielers um 1.
     /// </summary>
-    public void OnGlassClicked()
-    {
-        Player localPlayer = PhotonNetwork.LocalPlayer;
 
-        int currentPoints = GetPlayerPoints(localPlayer);
-        int newPoints = currentPoints + 1;
-
-        // CustomProperty mit neuem Punktestand setzen, wird automatisch synchronisiert
-        Hashtable props = new Hashtable { { "Points", newPoints } };
-        localPlayer.SetCustomProperties(props);
-    }
 
     /// <summary>
     /// Wird aufgerufen, wenn sich eine Spieler-Eigenschaft ändert.
@@ -253,6 +266,29 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
         int index = Random.Range(0, aufgabenDatenbank.aufgabenListe.Count);
         return aufgabenDatenbank.aufgabenListe[index];
+    }
+
+    public void ArrangePlayerFrames()
+    {
+        float spacing = 190f; // Abstand zwischen den PlayerFrames
+        int count = playerListParent.childCount;
+
+        for (int i = 0; i < count; i++)
+        {
+            RectTransform rt = playerListParent.GetChild(i).GetComponent<RectTransform>();
+
+            if (i == 0)
+            {
+                rt.anchoredPosition = new Vector2(0f, rt.anchoredPosition.y); // Mitte
+                continue;
+            }
+
+            int magnitude = (i + 1) / 2;
+            int direction = (i % 2 == 1) ? 1 : -1; // ungerade = rechts, gerade = links
+
+            float x = direction * magnitude * spacing;
+            rt.anchoredPosition = new Vector2(x, rt.anchoredPosition.y);
+        }
     }
 
 }
