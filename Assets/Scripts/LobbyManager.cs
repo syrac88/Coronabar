@@ -259,24 +259,18 @@ public class LobbyManager : MonoBehaviourPunCallbacks
 
     public void ToggleAudio()
     {
-        Debug.Log("ToggleAudio gedrückt!");
-
         if (Music.Instance == null)
         {
-            Debug.Log("Music.Instance ist NULL");
             return;
         }
-        Debug.Log($"isPlaying={Music.Instance.isPlaying}");
 
         if (Music.Instance.isPlaying)
         {
             Music.Instance.PauseMusic();
-            Debug.Log("PauseMusic aufgerufen");
         }
         else
         {
             Music.Instance.ResumeMusic();
-            Debug.Log("ResumeMusic aufgerufen");
         }
     }
 
