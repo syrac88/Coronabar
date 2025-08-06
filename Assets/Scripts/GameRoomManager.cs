@@ -291,4 +291,32 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         }
     }
 
+    public void BeendeSpiel()
+    {
+        // In Unity Editor stoppen
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        // In einer normalen Build-Anwendung beenden
+        Application.Quit();
+#endif
+    }
+
+    public void ToggleAudio()
+    {
+        if (Music.Instance == null)
+        {
+            return;
+        }
+
+        if (Music.Instance.isPlaying)
+        {
+            Music.Instance.PauseMusic();
+        }
+        else
+        {
+            Music.Instance.ResumeMusic();
+        }
+    }
+
 }

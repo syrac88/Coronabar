@@ -245,4 +245,39 @@ public class LobbyManager : MonoBehaviourPunCallbacks
         PhotonNetwork.LocalPlayer.SetCustomProperties(props);
 
     }
+
+    public void BeendeSpiel()
+    {
+        // In Unity Editor stoppen
+    #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+    #else
+            // In einer normalen Build-Anwendung beenden
+            Application.Quit();
+    #endif
+    }
+
+    public void ToggleAudio()
+    {
+        Debug.Log("ToggleAudio gedrückt!");
+
+        if (Music.Instance == null)
+        {
+            Debug.Log("Music.Instance ist NULL");
+            return;
+        }
+        Debug.Log($"isPlaying={Music.Instance.isPlaying}");
+
+        if (Music.Instance.isPlaying)
+        {
+            Music.Instance.PauseMusic();
+            Debug.Log("PauseMusic aufgerufen");
+        }
+        else
+        {
+            Music.Instance.ResumeMusic();
+            Debug.Log("ResumeMusic aufgerufen");
+        }
+    }
+
 }
