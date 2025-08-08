@@ -113,7 +113,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     /// </summary>
     public override void OnJoinRoomFailed(short returnCode, string message)
     {
-        RoomOptions options = new RoomOptions { MaxPlayers = 8 };
+        RoomOptions options = new RoomOptions { MaxPlayers = 7 };
         PhotonNetwork.CreateRoom(currentRoomName, options, TypedLobby.Default);
     }
 
