@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
 using TMPro;
@@ -9,17 +9,23 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
 {
     [Header("UI Referenzen")]
     public TMP_Text textBesitzer;      // Zeigt Namen des aktuellen Besitzers (oben)
-    public Button buttonAufgabe;       // Knopf mit Text „LOS!“ oder Aufgabe (mit Kind-Text)
-    public TMP_Text textAufgabe;       // Kindtext in buttonAufgabe, zeigt „LOS!“ oder Text Aufgabe
-    public Button buttonErledigt;      // Button unten, nur für Besitzer sichtbar
+    public Button buttonAufgabe;       // Knopf mit Text â€žLOS!â€œ oder Aufgabe (mit Kind-Text)
+    public TMP_Text textAufgabe;       // Kindtext in buttonAufgabe, zeigt â€žLOS!â€œ oder Text Aufgabe
+    public Button buttonErledigt;      // Button unten, nur fÃ¼r Besitzer sichtbar
 
     [Header("Aufgabendatenbank")]
     public AufgabenDatenbank aufgabenDatenbank;
 
-    // Keys für Room Properties
+    // Keys fÃ¼r Room Properties
     private const string KEY_OWNER = "TaskOwner";
     private const string KEY_INDEX = "TaskIndex";
     private const string KEY_STATUS = "TaskStatus";
+
+    // ðŸ”¹ NEU: ZÃ¤hler fÃ¼r erledigte Aufgaben
+    private int erledigteAufgabenCounter = 0;
+
+    // ðŸ”¹ NEU: Schwellwert bis Minispiel startet
+    [SerializeField] private int aufgabenBisMinispiel = 3;
 
     void Start()
     {
@@ -52,7 +58,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
 
         if (taskStatus == "waiting")
         {
-            // Noch keine Aufgabe gezogen -> Besitzer sieht „LOS!“, andere nicht
+            // Noch keine Aufgabe gezogen -> Besitzer sieht â€žLOS!â€œ, andere nicht
             buttonAufgabe.gameObject.SetActive(iAmOwner);
             buttonErledigt.gameObject.SetActive(false);
 
@@ -61,7 +67,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
         }
         else if (taskStatus == "active" && taskIndex >= 0)
         {
-            // Aufgabe aktiv, alle sehen sie, nur Besitzer „Erledigt“-Button
+            // Aufgabe aktiv, alle sehen sie, nur Besitzer â€žErledigtâ€œ-Button
             if (aufgabenDatenbank != null && taskIndex < aufgabenDatenbank.aufgabenListe.Count)
             {
                 textAufgabe.text = aufgabenDatenbank.aufgabenListe[taskIndex].aufgabenText;
@@ -77,7 +83,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            // Keiner Aufgabe zuständig, alles ausblenden
+            // Keiner Aufgabe zustÃ¤ndig, alles ausblenden
             buttonAufgabe.gameObject.SetActive(false);
             buttonErledigt.gameObject.SetActive(false);
             textAufgabe.gameObject.SetActive(false);
@@ -85,7 +91,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
     }
 
 
-    // Besitzer klickt auf „LOS!“ um Aufgabe zu ziehen
+    // Besitzer klickt auf â€žLOS!â€œ um Aufgabe zu ziehen
     void OnLosClicked()
     {
         var props = PhotonNetwork.CurrentRoom.CustomProperties;
@@ -112,7 +118,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
     }
 
 
-    // Besitzer klickt „Erledigt“, setzt nächsten Spieler als Besitzer und löscht Aufgabe
+    // Besitzer klickt â€žErledigtâ€œ, setzt nÃ¤chsten Spieler als Besitzer und lÃ¶scht Aufgabe
     void OnTaskDoneClicked()
     {
         var props = PhotonNetwork.CurrentRoom.CustomProperties;
@@ -139,5 +145,25 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
         PhotonNetwork.CurrentRoom.SetCustomProperties(newProps);
 
         FindFirstObjectByType<GameRoomManager>().AddRoundPointsToTotalForAll();
+
+        // --- NEU: Aufgaben-ZÃ¤hler erhÃ¶hen ---
+        erledigteAufgabenCounter++;
+
+        // Wenn wir mind. X Aufgaben erledigt haben â†’ Minispiel starten
+        if (erledigteAufgabenCounter >= aufgabenBisMinispiel)
+        {
+            // Reset fÃ¼r nÃ¤chste Runde
+            erledigteAufgabenCounter = 0;
+
+            // Nur der MasterClient soll das Minispiel starten
+            if (PhotonNetwork.IsMasterClient)
+            {
+                var gameRoomManager = FindFirstObjectByType<GameRoomManager>();
+                if (gameRoomManager != null)
+                {
+                    gameRoomManager.StartMinigameAfterReset();
+                }
+            }
+        }
     }
 }

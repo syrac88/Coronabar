@@ -18,7 +18,17 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     public GameObject aufgabenfeldPrefab;     // Dein Aufgabenfeld Prefab zum Instanziieren
     public TMP_Text textBarName;            // Barname - Schild
     public Sprite[] charakterSprites;
+    GameObject aufgabenfeldInstance = null;
 
+    //VIP
+    [Header("VIP UI")]
+    public GameObject vipPanel;           // VIP Panel GameObject (Inspector zuteilen)
+    public Image vipCharacterImage;       // Image für Charakterbild im VIP Panel
+    public TMP_Text vipNameText;          // Textfeld für Gewinnername VIP
+
+    //Minigamestarten
+    private int completedTasks = 0;
+    public int tasksToComplete = 3; // Anzahl bis Minispiel startet
 
     // Verknüpft jeden Spieler (über dessen ActorNumber) mit seinem PlayerFrame im UI
     private Dictionary<int, GameObject> playerFrames = new Dictionary<int, GameObject>();
@@ -34,11 +44,11 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         var canvas = FindFirstObjectByType<Canvas>();
         if (canvas != null && aufgabenfeldPrefab != null)
         {
-            Instantiate(aufgabenfeldPrefab, canvas.transform);
+            aufgabenfeldInstance = Instantiate(aufgabenfeldPrefab, canvas.transform);
         }
         else
         {
-            Debug.LogError("Canvas oder Aufgabenfeld-Prefab fehlt!");
+
         }
 
         // 
@@ -60,6 +70,19 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
             UpdatePointsUI(player.ActorNumber, GetPlayerPoints(player));
         }
 
+    }
+
+    [PunRPC]
+    public void SetAufgabenfeldVisible(bool visible)
+    {
+        if (aufgabenfeldInstance != null)
+            aufgabenfeldInstance.SetActive(visible);
+        else
+        {
+            // Fallback für "lost reference" – per Name suchen!
+            var go = GameObject.Find("Aufgabenfeld(Clone)");
+            if (go != null) go.SetActive(visible);
+        }
     }
 
     public void AddRoundPointsToTotalForAll()
@@ -177,7 +200,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            Debug.LogWarning("PlayerFrameBehaviour im Prefab ist nicht gesetzt!");
+
         }
 
         ArrangePlayerFrames();
@@ -237,7 +260,6 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         };
             PhotonNetwork.CurrentRoom.SetCustomProperties(startProps);
 
-            Debug.Log("Initial Room Properties gesetzt vom MasterClient.");
         }
     }
 
@@ -318,5 +340,144 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
             Music.Instance.ResumeMusic();
         }
     }
+
+    public void StartMinigame01()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        var go = PhotonNetwork.Instantiate("PhotonPrefabs/Minispiel01_PrefabRoot", Vector3.zero, Quaternion.identity);
+
+        var mainCanvas = GameObject.Find("Canvas");
+        if (mainCanvas != null)
+        {
+            go.transform.SetParent(mainCanvas.transform, false);
+
+            var minispiel01 = go.GetComponent<Minispiel01>();
+            if (minispiel01 != null && minispiel01.minigamePanel != null)
+            {
+                FindFirstObjectByType<GameRoomManager>().photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, false);
+                minispiel01.TriggerMinigameStart(); // Trigger per RPC den Start bei allen Clients
+            }
+            else
+            {
+                Debug.LogWarning("Minispiel01-Script oder minigamePanel nicht gefunden!");
+            }
+        }
+        else
+        {
+            Debug.LogError("Canvas wurde nicht gefunden!");
+        }
+    }
+
+    [PunRPC]
+    public void NotifyWinnerToGameManager(int winnerActorId)
+    {
+        Player winner = PhotonNetwork.CurrentRoom.GetPlayer(winnerActorId);
+        if (winner == null)
+        {
+            Debug.LogWarning("Winner Player nicht gefunden!");
+            return;
+        }
+
+        vipPanel.SetActive(true);
+        vipNameText.text = winner.NickName;
+
+        if (winner.CustomProperties.TryGetValue("CharakterID", out object charIdObj))
+        {
+            int charID = (int)charIdObj;
+            if (charakterSprites != null && charID >= 0 && charID < charakterSprites.Length)
+            {
+                vipCharacterImage.sprite = charakterSprites[charID];
+            }
+        }
+        else
+        {
+            Debug.LogWarning("CharakterID nicht gefunden bei Gewinner");
+        }
+    }
+
+    public void OnTaskCompleted()
+    {
+        completedTasks++;
+        if (completedTasks >= tasksToComplete)
+        {
+            StartMinigame01(); // Minispiel starten, wenn genügend erledigt wurden
+            completedTasks = 0; // Reset für nächste Runde
+        }
+    }
+
+    public void ResetTaskStatusForMinigame()
+    {
+        Hashtable newProps = new Hashtable
+    {
+        { "TaskOwner", -1 },    // Oder setze direkt den nächsten Spieler als Besitzer, wenn gewünscht
+        { "TaskIndex", -1 },
+        { "TaskStatus", "waiting" }
+    };
+        PhotonNetwork.CurrentRoom.SetCustomProperties(newProps);
+    }
+
+    public void StartMinigameAfterReset()
+    {
+        ResetTaskStatusForMinigame();
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            StartMinigame01(); // Starte Minispiel synchron für alle
+        }
+    }
+
+    public void AssignNextTaskOwner()
+    {
+        StartCoroutine(AssignNextOwnerDelayed());
+        /*
+        Player[] players = PhotonNetwork.PlayerList;
+        if (players.Length == 0)
+            return;
+
+        Hashtable props = PhotonNetwork.CurrentRoom.CustomProperties;
+        int currentOwner = props.ContainsKey("TaskOwner") ? (int)props["TaskOwner"] : -1;
+
+        int ownerIndex = System.Array.FindIndex(players, p => p.ActorNumber == currentOwner);
+        int nextIndex = (ownerIndex + 1) % players.Length;
+        int nextOwner = players[nextIndex].ActorNumber;
+
+        Hashtable newProps = new Hashtable
+        {
+            { "TaskOwner", nextOwner },
+            { "TaskIndex", -1 },
+            { "TaskStatus", "waiting" }
+        };
+
+        PhotonNetwork.CurrentRoom.SetCustomProperties(newProps); */
+    }
+
+    private System.Collections.IEnumerator AssignNextOwnerDelayed()
+    {
+        yield return null; // 1 Frame warten
+
+        Player[] players = PhotonNetwork.PlayerList;
+        if (players.Length == 0) yield break;
+
+        Hashtable props = PhotonNetwork.CurrentRoom.CustomProperties;
+        int currentOwner = props.ContainsKey("TaskOwner") ? (int)props["TaskOwner"] : -1;
+
+        int ownerIndex = System.Array.FindIndex(players, p => p.ActorNumber == currentOwner);
+        int nextIndex = (ownerIndex + 1) % players.Length;
+        int nextOwner = players[nextIndex].ActorNumber;
+
+        Hashtable newProps = new Hashtable
+    {
+        { "TaskOwner", nextOwner },
+        { "TaskIndex", -1 },
+        { "TaskStatus", "waiting" }
+    };
+
+        PhotonNetwork.CurrentRoom.SetCustomProperties(newProps);
+    }
+
+
+
+
 
 }

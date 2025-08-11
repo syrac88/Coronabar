@@ -40,6 +40,11 @@ MonoBehaviour:
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
+  - SendClickCount
+  - ShowResults
+  - RpcStartMinigame
+  - SetAufgabenfeldVisible
+  - NotifyWinnerToGameManager
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1
