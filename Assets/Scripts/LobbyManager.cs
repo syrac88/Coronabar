@@ -12,7 +12,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     [Header("UI Elemente")]
     public TMP_InputField inputRoomName;       // Eingabefeld für den Namen des Raums (Bar-Name)
     public TMP_InputField inputPlayerName;     // Eingabefeld für den Spielernamen
-    public Button buttonEnterRoom;              // Button zum Betreten oder Erstellen des Raums
+    public Button buttonEnterRoom;               // Button zum Betreten oder Erstellen des Raums
 
     [Header("UI Raum-Liste")]
     public Transform roomListParent;            // Parent-Objekt (Content der ScrollView), wo Buttons dynamisch erstellt werden

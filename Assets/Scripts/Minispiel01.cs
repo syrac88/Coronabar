@@ -17,15 +17,21 @@ public class Minispiel01 : MonoBehaviourPun
     public TMP_Text infoText;
     public GameObject resultsPanel;
     public TMP_Text resultsText;
+    public TMP_Text TextCloseCountdown;
 
-    private float countdownTime = 3f; // Spielzeit 3 Sekunden (kann angepasst werden)
+    // Spielzeit in Sekunden
+    private float countdownTime = 20f;
     private bool gameRunning = false;
     private int localClicks = 0;
+
+    // Speichert die Klickzahlen der Spieler (gesammelt vom MasterClient)
     private Dictionary<int, int> playerClicks = new Dictionary<int, int>();
-    private Transform canvasTransform;  // Canvas als Parent
+
+    private Transform canvasTransform;
 
     private void Start()
     {
+        // UI initial verbergen
         clickButton.gameObject.SetActive(false);
         resultsPanel.SetActive(false);
         if (TextCounter != null)
@@ -37,6 +43,9 @@ public class Minispiel01 : MonoBehaviourPun
             TextCounter.text = "0";
     }
 
+    /// <summary>
+    /// Startet das Minispiel per RPC bei allen Clients
+    /// </summary>
     public void TriggerMinigameStart()
     {
         photonView.RPC("RpcStartMinigame", RpcTarget.All);
@@ -52,6 +61,9 @@ public class Minispiel01 : MonoBehaviourPun
         StartCoroutine(MinigameFlow());
     }
 
+    /// <summary>
+    /// Ablauf des Minispiels: Countdown, Klicks sammeln, Auswertung
+    /// </summary>
     private IEnumerator MinigameFlow()
     {
         gameRunning = true;
@@ -68,8 +80,8 @@ public class Minispiel01 : MonoBehaviourPun
         if (TextCounter != null)
             TextCounter.text = "0";
 
-        // 3 Sekunden Vor-Countdown
-        float preCountdown = 3f;
+        // Vor-Countdown 3 Sekunden
+        float preCountdown = 10f;
         while (preCountdown > 0)
         {
             countdownText.text = Mathf.Ceil(preCountdown).ToString();
@@ -78,11 +90,12 @@ public class Minispiel01 : MonoBehaviourPun
         }
 
         countdownText.text = countdownTime.ToString();
-        infoText.text = "Wer in 3 Sekunden am meisten klickt, gewinnt!";
+        infoText.text = $"Die meisten Klicks in {countdownTime} Sekunden gewinnen!";
         clickButton.gameObject.SetActive(true);
         if (TextCounter != null)
             TextCounter.gameObject.SetActive(true);
 
+        // Haupt-Countdown
         float timer = countdownTime;
         while (timer > 0)
         {
@@ -97,22 +110,18 @@ public class Minispiel01 : MonoBehaviourPun
 
         infoText.text = "Auswertung...";
 
-        Debug.Log($"Sending click count {localClicks} from player {PhotonNetwork.LocalPlayer.ActorNumber}");
-
-        // Klickzahl an MasterClient senden (einmalig)
+        // Klickzahlen an MasterClient senden (einmalig)
         photonView.RPC("SendClickCount", RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber, localClicks);
 
-        // MasterClient wertet aus und sendet Ergebnis zurück
         if (PhotonNetwork.IsMasterClient)
         {
-            // Eigene Klickzahl speichern
+            // Eigene Klickzahl im Dictionary speichern
             playerClicks[PhotonNetwork.LocalPlayer.ActorNumber] = localClicks;
 
-            // Warte aktiv auf Klickzahlen aller Spieler oder Timeout
+            // Warte aktiv, bis alle Klickzahlen eingegangen sind oder Timeout (20s)
             float waitTimeout = 20f;
             float elapsed = 0f;
             int playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
-
             while (playerClicks.Count < playerCount && elapsed < waitTimeout)
             {
                 elapsed += Time.deltaTime;
@@ -139,7 +148,7 @@ public class Minispiel01 : MonoBehaviourPun
                 }
 
                 string winnerName = PhotonNetwork.CurrentRoom.GetPlayer(winnerId)?.NickName ?? "Unbekannt";
-                string resultStr = "Klick-Ergebnisse:\n";
+                string resultStr = "Ergebnisse:\n";
 
                 foreach (var kvp in playerClicks)
                 {
@@ -153,6 +162,9 @@ public class Minispiel01 : MonoBehaviourPun
         }
     }
 
+    /// <summary>
+    /// Zählt auf lokalen Klick
+    /// </summary>
     private void OnClickButtonPressed()
     {
         if (!gameRunning)
@@ -164,15 +176,20 @@ public class Minispiel01 : MonoBehaviourPun
             TextCounter.text = localClicks.ToString();
     }
 
+    /// <summary>
+    /// RPC zum Empfangen von Klickzahlen beim MasterClient
+    /// </summary>
     [PunRPC]
     public void SendClickCount(int actorNumber, int clicks, PhotonMessageInfo info)
     {
-        Debug.Log($"SendClickCount received on MasterClient: Player {actorNumber}, Clicks {clicks}");
         if (!PhotonNetwork.IsMasterClient) return;
 
         playerClicks[actorNumber] = clicks;
     }
 
+    /// <summary>
+    /// RPC zum Anzeigen des Ergebnisses an alle Clients
+    /// </summary>
     [PunRPC]
     public void ShowResults(string resultString)
     {
@@ -182,16 +199,41 @@ public class Minispiel01 : MonoBehaviourPun
         countdownText.text = "";
         gameRunning = false;
 
-        // Starte bei allen Clients das Schließen nach 3 Sekunden Wartezeit
-        StartCoroutine(CloseAfterDelay(3f));
+        // Nach 3 Sekunden Minispiel schließen
+        StartCoroutine(CloseAfterDelay(20f));
     }
 
+    /// <summary>
+    /// Verzögerter Aufruf zur Minispiel-Schließung
+    /// </summary>
     private IEnumerator CloseAfterDelay(float delay)
     {
-        yield return new WaitForSeconds(delay);
+        float t = delay;
+        // Optional: Zeige "Minispiel schließt in X..." o.ä.
+        if (TextCloseCountdown != null)
+            TextCloseCountdown.gameObject.SetActive(true);
+
+        while (t > 0f)
+        {
+            if (TextCloseCountdown != null)
+                TextCloseCountdown.text = $"Minispiel endet in {Mathf.CeilToInt(t)}...";
+
+            t -= Time.deltaTime;
+            yield return null;
+        }
+
+        if (TextCloseCountdown != null)
+        {
+            TextCloseCountdown.text = "";           // Optional, um Text zu löschen
+            TextCloseCountdown.gameObject.SetActive(false);
+        }
+
         CloseMinigame();
     }
 
+    /// <summary>
+    /// Schließt Minispiel-UI und informiert GameRoomManager über Gewinner
+    /// </summary>
     public void CloseMinigame()
     {
         minigamePanel.SetActive(false);
@@ -206,7 +248,7 @@ public class Minispiel01 : MonoBehaviourPun
 
         if (PhotonNetwork.IsMasterClient)
         {
-            // Gewinner ermitteln für VIP-Anzeige (evtl. doppelt)
+            // Gewinner bestimmen (doppelt sicherheitshalber)
             int maxClicks = -1;
             int winnerId = -1;
             foreach (var kvp in playerClicks)
@@ -221,21 +263,22 @@ public class Minispiel01 : MonoBehaviourPun
             var gameRoomManager = FindFirstObjectByType<GameRoomManager>();
             if (gameRoomManager != null)
             {
+                // Gewinner an GameRoomManager melden
                 gameRoomManager.photonView.RPC("NotifyWinnerToGameManager", RpcTarget.All, winnerId);
+                // Nächsten Task-Owner zuweisen
                 gameRoomManager.AssignNextTaskOwner();
+                // Aufgabenfeld wieder sichtbar machen
                 gameRoomManager.photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, true);
             }
-            else
-            {
-                Debug.LogWarning("GameRoomManager nicht gefunden");
-            }
 
-            PhotonNetwork.Destroy(gameObject); // zerstört Minispiel-Instanz im Netzwerk
+            // Netzwerk-Instanz zerstören
+            PhotonNetwork.Destroy(gameObject);
         }
     }
 
     private void Awake()
     {
+        // Füge Minispiel zur Canvas hinzu
         if (canvasTransform == null)
         {
             GameObject c = GameObject.Find("Canvas");
@@ -243,12 +286,6 @@ public class Minispiel01 : MonoBehaviourPun
                 canvasTransform = c.transform;
         }
         if (canvasTransform != null)
-        {
             transform.SetParent(canvasTransform, false);
-        }
-        else
-        {
-            Debug.LogWarning("Canvas nicht gefunden, Parent konnte nicht gesetzt werden!");
-        }
     }
 }
