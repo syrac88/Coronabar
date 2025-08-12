@@ -19,8 +19,6 @@ public class Minispiel03 : MonoBehaviourPun
     public TMP_Text resultsText;
     public TMP_Text TextCloseCountdown;
 
-    // Flag zum Merken, wo der Button zuletzt war
-    private bool toggleX = false;
 
     // Feste X-Positionen
     [SerializeField] private float fixedX_A = -270f;

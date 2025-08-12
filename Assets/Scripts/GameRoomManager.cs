@@ -342,56 +342,39 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public void StartMinigame01()
+    public void StartMinigame(int index)
     {
-        Debug.Log("Starte Minigame 01");
         if (!PhotonNetwork.IsMasterClient) return;
 
-        var go = PhotonNetwork.Instantiate("PhotonPrefabs/Minispiel01_PrefabRoot", Vector3.zero, Quaternion.identity);
+        Debug.Log($"Starte Minigame {index}");
 
+        string prefabName = $"PhotonPrefabs/Minispiel0{index}_PrefabRoot";
+
+        var go = PhotonNetwork.Instantiate(prefabName, Vector3.zero, Quaternion.identity);
         var mainCanvas = GameObject.Find("Canvas");
+
         if (mainCanvas != null)
         {
             go.transform.SetParent(mainCanvas.transform, false);
 
-            var minispiel01 = go.GetComponent<Minispiel01>();
-            if (minispiel01 != null && minispiel01.minigamePanel != null)
-            {
-                FindFirstObjectByType<GameRoomManager>().photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, false);
-                minispiel01.TriggerMinigameStart(); // Trigger per RPC den Start bei allen Clients
-            }
-            else
-            {
-                Debug.LogWarning("Minispiel01-Script oder minigamePanel nicht gefunden!");
-            }
-        }
-        else
-        {
-            Debug.LogError("Canvas wurde nicht gefunden!");
-        }
-    }
+            // Minigame-Script ermitteln
+            var minigame = go.GetComponent<MonoBehaviour>() as MonoBehaviour;
 
-    public void StartMinigame02()
-    {
-        Debug.Log("Starte Minigame 02");
-        if (!PhotonNetwork.IsMasterClient) return;
+            // Falls alle deine Minispiele z. B. von einer gemeinsamen Basisklasse "BaseMinigame" oder Interface IMinigame erben:
+            // var minigame = go.GetComponent<IMinigame>();
 
-        var go = PhotonNetwork.Instantiate("PhotonPrefabs/Minispiel02_PrefabRoot", Vector3.zero, Quaternion.identity);
-
-        var mainCanvas = GameObject.Find("Canvas");
-        if (mainCanvas != null)
-        {
-            go.transform.SetParent(mainCanvas.transform, false);
-
-            var minispiel02 = go.GetComponent<Minispiel02>();
-            if (minispiel02 != null && minispiel02.minigamePanel != null)
+            if (minigame != null)
             {
                 photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, false);
-                minispiel02.TriggerMinigameStart();
+
+                // Bei deinem aktuellen Setup musst du den richtigen Typ casten, um TriggerMinigameStart() aufzurufen
+                if (index == 1) go.GetComponent<Minispiel01>().TriggerMinigameStart();
+                else if (index == 2) go.GetComponent<Minispiel02>().TriggerMinigameStart();
+                else if (index == 3) go.GetComponent<Minispiel03>().TriggerMinigameStart();
             }
             else
             {
-                Debug.LogWarning("Minispiel02-Script oder minigamePanel nicht gefunden!");
+                Debug.LogWarning($"Minispiel{index} Script oder minigamePanel nicht gefunden!");
             }
         }
         else
@@ -400,34 +383,6 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public void StartMinigame03()
-    {
-        Debug.Log("Starte Minigame 03");
-        if (!PhotonNetwork.IsMasterClient) return;
-
-        var go = PhotonNetwork.Instantiate("PhotonPrefabs/Minispiel03_PrefabRoot", Vector3.zero, Quaternion.identity);
-
-        var mainCanvas = GameObject.Find("Canvas");
-        if (mainCanvas != null)
-        {
-            go.transform.SetParent(mainCanvas.transform, false);
-
-            var minispiel03 = go.GetComponent<Minispiel03>();
-            if (minispiel03 != null && minispiel03.minigamePanel != null)
-            {
-                photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, false);
-                minispiel03.TriggerMinigameStart();
-            }
-            else
-            {
-                Debug.LogWarning("Minispiel03-Script oder minigamePanel nicht gefunden!");
-            }
-        }
-        else
-        {
-            Debug.LogError("Canvas wurde nicht gefunden!");
-        }
-    }
 
 
     [PunRPC]
@@ -477,26 +432,24 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         {
             if (minigameIndex == 1)
             {
-                Debug.Log("Starte Minispiel 01");
-                StartMinigame01();
+                StartMinigame(1);
                 minigameIndex = 2; // danach Minispiel 2
             }
             else if (minigameIndex == 2)
             {
-                Debug.Log("Starte Minispiel 02");
-                StartMinigame02();
+                StartMinigame(2);
                 minigameIndex = 3; // danach Minispiel 3
             }
             else if (minigameIndex == 3)
             {
-                Debug.Log("Starte Minispiel 03");
-                StartMinigame03();
+                StartMinigame(3);
                 minigameIndex = 1; // danach wieder Minispiel 1
             }
-
-            completedTasks = 0; // Zähler zurücksetzen
         }
+
+        completedTasks = 0; // Zähler zurücksetzen
     }
+
 
     public void AssignNextTaskOwner()
     {
