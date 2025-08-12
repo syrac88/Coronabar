@@ -7,7 +7,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-public class Minispiel02 : MonoBehaviourPun
+public class Minispiel03 : MonoBehaviourPun
 {
     [Header("UI Elemente")]
     public GameObject minigamePanel;
@@ -183,19 +183,19 @@ public class Minispiel02 : MonoBehaviourPun
         if (TextCounter != null)
             TextCounter.text = localClicks.ToString();
 
-
         RectTransform buttonRect = clickButton.GetComponent<RectTransform>();
 
         // Ausgangsposition holen
         Vector2 pos = buttonRect.anchoredPosition;
 
-        // Umschalten und neue X-Position setzen
-        toggleX = !toggleX;
-        pos.x = toggleX ? fixedX_A : fixedX_B;
+        // Zufallswert zwischen A und B generieren
+        float randomX = Random.Range(fixedX_A, fixedX_B);
+        pos.x = randomX;
 
         // Zurückschreiben
         buttonRect.anchoredPosition = pos;
     }
+
 
     /// <summary>
     /// RPC zum Empfangen von Klickzahlen beim MasterClient

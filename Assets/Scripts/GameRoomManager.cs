@@ -400,6 +400,35 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         }
     }
 
+    public void StartMinigame03()
+    {
+        Debug.Log("Starte Minigame 03");
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        var go = PhotonNetwork.Instantiate("PhotonPrefabs/Minispiel03_PrefabRoot", Vector3.zero, Quaternion.identity);
+
+        var mainCanvas = GameObject.Find("Canvas");
+        if (mainCanvas != null)
+        {
+            go.transform.SetParent(mainCanvas.transform, false);
+
+            var minispiel03 = go.GetComponent<Minispiel03>();
+            if (minispiel03 != null && minispiel03.minigamePanel != null)
+            {
+                photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, false);
+                minispiel03.TriggerMinigameStart();
+            }
+            else
+            {
+                Debug.LogWarning("Minispiel03-Script oder minigamePanel nicht gefunden!");
+            }
+        }
+        else
+        {
+            Debug.LogError("Canvas wurde nicht gefunden!");
+        }
+    }
+
 
     [PunRPC]
     public void NotifyWinnerToGameManager(int winnerActorId)
@@ -428,30 +457,6 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-    public void OnTaskCompleted()
-    {
-        completedTasks++;
-
-        if (completedTasks >= tasksToComplete)
-        {
-            // Minispiel auswählen
-            Debug.Log("MiniGameIndex = " + minigameIndex);
-            if (minigameIndex == 1)
-            {
-                
-                StartMinigame01();
-                minigameIndex = 2; // Nächstes Mal soll Minispiel02 starten
-            }
-            else
-            {
-                Debug.Log("Starte Minigame 02");
-                StartMinigame02();
-                minigameIndex = 1; // Danach wieder Minispiel01
-            }
-
-            completedTasks = 0; // Zähler zurücksetzen
-        }
-    }
 
     public void ResetTaskStatusForMinigame()
     {
@@ -472,14 +477,21 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         {
             if (minigameIndex == 1)
             {
-
+                Debug.Log("Starte Minispiel 01");
                 StartMinigame01();
-                minigameIndex = 2; // Nächstes Mal soll Minispiel02 starten
+                minigameIndex = 2; // danach Minispiel 2
             }
-            else
+            else if (minigameIndex == 2)
             {
+                Debug.Log("Starte Minispiel 02");
                 StartMinigame02();
-                minigameIndex = 1; // Danach wieder Minispiel01
+                minigameIndex = 3; // danach Minispiel 3
+            }
+            else if (minigameIndex == 3)
+            {
+                Debug.Log("Starte Minispiel 03");
+                StartMinigame03();
+                minigameIndex = 1; // danach wieder Minispiel 1
             }
 
             completedTasks = 0; // Zähler zurücksetzen
