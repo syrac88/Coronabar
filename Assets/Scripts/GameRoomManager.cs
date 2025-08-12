@@ -443,6 +443,11 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
             else if (minigameIndex == 3)
             {
                 StartMinigame(3);
+                minigameIndex = 4; // danach wieder Minispiel 1
+            }
+            else if (minigameIndex == 4)
+            {
+                StartMinigame(4);
                 minigameIndex = 1; // danach wieder Minispiel 1
             }
         }
