@@ -29,6 +29,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     //Minigamestarten
     private int completedTasks = 0;
     public int tasksToComplete = 3; // Anzahl bis Minispiel startet
+    private int minigameIndex = 1; // 1 = Minispiel01, 2 = Minispiel02
 
     // Verknüpft jeden Spieler (über dessen ActorNumber) mit seinem PlayerFrame im UI
     private Dictionary<int, GameObject> playerFrames = new Dictionary<int, GameObject>();
@@ -343,6 +344,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
     public void StartMinigame01()
     {
+        Debug.Log("Starte Minigame 01");
         if (!PhotonNetwork.IsMasterClient) return;
 
         var go = PhotonNetwork.Instantiate("PhotonPrefabs/Minispiel01_PrefabRoot", Vector3.zero, Quaternion.identity);
@@ -368,6 +370,36 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
             Debug.LogError("Canvas wurde nicht gefunden!");
         }
     }
+
+    public void StartMinigame02()
+    {
+        Debug.Log("Starte Minigame 02");
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        var go = PhotonNetwork.Instantiate("PhotonPrefabs/Minispiel02_PrefabRoot", Vector3.zero, Quaternion.identity);
+
+        var mainCanvas = GameObject.Find("Canvas");
+        if (mainCanvas != null)
+        {
+            go.transform.SetParent(mainCanvas.transform, false);
+
+            var minispiel02 = go.GetComponent<Minispiel02>();
+            if (minispiel02 != null && minispiel02.minigamePanel != null)
+            {
+                photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, false);
+                minispiel02.TriggerMinigameStart();
+            }
+            else
+            {
+                Debug.LogWarning("Minispiel02-Script oder minigamePanel nicht gefunden!");
+            }
+        }
+        else
+        {
+            Debug.LogError("Canvas wurde nicht gefunden!");
+        }
+    }
+
 
     [PunRPC]
     public void NotifyWinnerToGameManager(int winnerActorId)
@@ -399,10 +431,25 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     public void OnTaskCompleted()
     {
         completedTasks++;
+
         if (completedTasks >= tasksToComplete)
         {
-            StartMinigame01(); // Minispiel starten, wenn genügend erledigt wurden
-            completedTasks = 0; // Reset für nächste Runde
+            // Minispiel auswählen
+            Debug.Log("MiniGameIndex = " + minigameIndex);
+            if (minigameIndex == 1)
+            {
+                
+                StartMinigame01();
+                minigameIndex = 2; // Nächstes Mal soll Minispiel02 starten
+            }
+            else
+            {
+                Debug.Log("Starte Minigame 02");
+                StartMinigame02();
+                minigameIndex = 1; // Danach wieder Minispiel01
+            }
+
+            completedTasks = 0; // Zähler zurücksetzen
         }
     }
 
@@ -423,7 +470,19 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.IsMasterClient)
         {
-            StartMinigame01(); // Starte Minispiel synchron für alle
+            if (minigameIndex == 1)
+            {
+
+                StartMinigame01();
+                minigameIndex = 2; // Nächstes Mal soll Minispiel02 starten
+            }
+            else
+            {
+                StartMinigame02();
+                minigameIndex = 1; // Danach wieder Minispiel01
+            }
+
+            completedTasks = 0; // Zähler zurücksetzen
         }
     }
 

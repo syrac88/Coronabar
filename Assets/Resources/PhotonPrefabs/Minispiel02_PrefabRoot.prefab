@@ -186,7 +186,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Minispiel 1
+  m_text: Minispiel 2
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
   m_sharedMaterial: {fileID: 2140032, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
@@ -291,7 +291,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.0010986, y: 32}
+  m_AnchoredPosition: {x: -265.14, y: 8}
   m_SizeDelta: {x: 247.9285, y: 104.5394}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7155233736973972865
@@ -402,10 +402,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5517678858702808849}
-  - component: {fileID: 9147716413002870427}
   - component: {fileID: 4511928367089876828}
+  - component: {fileID: 2132678804886490590}
   m_Layer: 0
-  m_Name: Minispiel01_PrefabRoot
+  m_Name: Minispiel02_PrefabRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -427,26 +427,6 @@ Transform:
   - {fileID: 6481110673677520684}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9147716413002870427
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3381849199763933166}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 845523a12ea844c4a9f1363a5fb5803c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  minigamePanel: {fileID: 3733199983492051535}
-  countdownText: {fileID: 7287006324473155162}
-  TextCounter: {fileID: 3465455166546599788}
-  clickButton: {fileID: 2432129706035589402}
-  infoText: {fileID: 2456680256875509981}
-  resultsPanel: {fileID: 6236076659014700163}
-  resultsText: {fileID: 7605674989014375309}
-  TextCloseCountdown: {fileID: 3900029655967186894}
 --- !u!114 &4511928367089876828
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -469,6 +449,29 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
+--- !u!114 &2132678804886490590
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3381849199763933166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa91f37910388264eb83423dbcac125a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  minigamePanel: {fileID: 3733199983492051535}
+  countdownText: {fileID: 7287006324473155162}
+  TextCounter: {fileID: 3465455166546599788}
+  clickButton: {fileID: 2432129706035589402}
+  infoText: {fileID: 2456680256875509981}
+  resultsPanel: {fileID: 6236076659014700163}
+  resultsText: {fileID: 7605674989014375309}
+  TextCloseCountdown: {fileID: 3900029655967186894}
+  PanelButtonSpace: {fileID: 1498850901285764046}
+  fixedX_A: -270
+  fixedX_B: 270
 --- !u!1 &3733199983492051535
 GameObject:
   m_ObjectHideFlags: 0
@@ -483,7 +486,7 @@ GameObject:
   - component: {fileID: 6442912119103517988}
   - component: {fileID: 5592592284522578501}
   m_Layer: 5
-  m_Name: Minigame_01
+  m_Name: Minigame_02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -503,8 +506,8 @@ RectTransform:
   m_Children:
   - {fileID: 2204836962098319552}
   - {fileID: 2356295027217439464}
-  - {fileID: 859882035381512919}
   - {fileID: 895031877188498751}
+  - {fileID: 859882035381512919}
   - {fileID: 347651111617086225}
   - {fileID: 342423342166399851}
   - {fileID: 4142509258691680394}
@@ -627,7 +630,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 262, y: -0.9223}
+  m_AnchoredPosition: {x: 253, y: 0.000030518}
   m_SizeDelta: {x: 247.9285, y: 104.5394}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8463649131237748297
