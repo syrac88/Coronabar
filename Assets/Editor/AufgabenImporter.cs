@@ -1,15 +1,14 @@
 using UnityEngine;
 using UnityEditor;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;   // Für LINQ: Distinct
 
 public class AufgabenImporter : EditorWindow
 {
     [TextArea(10, 20)]
     public string aufgabenTextListe;
 
-    public string saveFolder = "Assets/Aufgaben";
-    public string aufgabenDBAssetName = "AufgabenDB"; // Name ohne .asset
+    public string aufgabenDBAssetName = "AufgabenDB"; // Der Name deiner Datenbank-Datei
 
     [MenuItem("Tools/Aufgaben Importer")]
     public static void ShowWindow()
@@ -20,87 +19,61 @@ public class AufgabenImporter : EditorWindow
 
     void OnGUI()
     {
-        GUILayout.Label("Füge hier deine Aufgaben ein (jede Aufgabe eine neue Zeile):");
+        GUILayout.Label("Neue Aufgaben einfÃ¼gen (pro Zeile eine Aufgabe):", EditorStyles.boldLabel);
 
         aufgabenTextListe = EditorGUILayout.TextArea(aufgabenTextListe, GUILayout.Height(200));
 
-        saveFolder = EditorGUILayout.TextField("Speicherordner", saveFolder);
+        aufgabenDBAssetName = EditorGUILayout.TextField("Datenbank Name", aufgabenDBAssetName);
 
-        aufgabenDBAssetName = EditorGUILayout.TextField("AufgabenDB Name", aufgabenDBAssetName);
-
-        if (GUILayout.Button("Aufgaben importieren und Assets anlegen"))
+        if (GUILayout.Button("In Datenbank importieren"))
         {
-            ImportiereAufgaben();
+            ImportiereAufgabenInDB();
         }
     }
 
-    void ImportiereAufgaben()
+    void ImportiereAufgabenInDB()
     {
-        if (string.IsNullOrEmpty(aufgabenTextListe))
+        if (string.IsNullOrEmpty(aufgabenTextListe)) return;
+
+        // 1. Finde das Datenbank-Asset im Projekt
+        string[] guids = AssetDatabase.FindAssets(aufgabenDBAssetName + " t:AufgabenDatenbank");
+        if (guids.Length == 0)
         {
-            Debug.LogError("Keine Aufgaben gefunden!");
+            Debug.LogError("Fehler: Die Datenbank '" + aufgabenDBAssetName + "' wurde nicht gefunden!");
             return;
         }
 
-        string[] aufgaben = aufgabenTextListe
-            .Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .Where(s => !string.IsNullOrEmpty(s))
-            .ToArray();
+        string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+        AufgabenDatenbank db = AssetDatabase.LoadAssetAtPath<AufgabenDatenbank>(path);
 
-        if (!AssetDatabase.IsValidFolder(saveFolder))
+        if (db == null) return;
+
+        // 2. Texte in Zeilen zerlegen
+        string[] zeilen = aufgabenTextListe.Split(new[] { '\n', '\r' }, System.StringSplitOptions.RemoveEmptyEntries);
+        
+        // 3. Ã„nderungen fÃ¼r Unity registrieren (damit man sie speichern kann)
+        Undo.RecordObject(db, "Import Aufgaben");
+
+        foreach (string zeile in zeilen)
         {
-            Debug.Log($"Ordner {saveFolder} existiert nicht, erstelle...");
-            Directory.CreateDirectory(saveFolder);
-            AssetDatabase.Refresh();
+            string getrimmt = zeile.Trim();
+            if (string.IsNullOrEmpty(getrimmt)) continue;
+
+            // 4. Neue Aufgabe erstellen (ALS KLASSE, nicht mehr als Asset!)
+            Aufgabe neueAufgabe = new Aufgabe();
+            neueAufgabe.id = db.aufgabenListe.Count;
+            neueAufgabe.textDE = getrimmt;
+            neueAufgabe.textEN = ""; // Erstmal leer lassen
+
+            // 5. Der entscheidende Punkt: HIER muss "db." davor stehen!
+            db.aufgabenListe.Add(neueAufgabe);
         }
 
-        // Liste der erzeugten Aufgaben für spätere Zuweisung
-        var neuErstellteAufgaben = new System.Collections.Generic.List<Aufgabe>();
-        int startCount = 0;
-        // Prüfe bestehende Dateien, damit keine Indexüberschneidungen
-        while (File.Exists($"{saveFolder}/Aufgabe_{startCount}.asset")) startCount++;
-
-        int count = 0;
-        foreach (string aufgabeText in aufgaben)
-        {
-            Aufgabe neueAufgabe = ScriptableObject.CreateInstance<Aufgabe>();
-            neueAufgabe.aufgabenText = aufgabeText;
-
-            string assetPath = $"{saveFolder}/Aufgabe_{startCount + count}.asset";
-            AssetDatabase.CreateAsset(neueAufgabe, assetPath);
-            neuErstellteAufgaben.Add(neueAufgabe);
-            count++;
-        }
-
+        // 6. Speichern
+        EditorUtility.SetDirty(db);
         AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-
-        // --- AufgabenDB laden und Aufgabenliste erweitern ---
-        // Suche Pfad zur AufgabenDB-Datei
-        string[] dbPfadArray = AssetDatabase.FindAssets(aufgabenDBAssetName + " t:AufgabenDatenbank", new[] { saveFolder });
-        if (dbPfadArray.Length > 0)
-        {
-            string dbAssetPath = AssetDatabase.GUIDToAssetPath(dbPfadArray[0]);
-            var aufgabenDB = AssetDatabase.LoadAssetAtPath<AufgabenDatenbank>(dbAssetPath);
-            if (aufgabenDB != null)
-            {
-                // Neue Aufgaben anhängen
-                aufgabenDB.aufgabenListe.AddRange(neuErstellteAufgaben);
-                // Optional: Doppelte vermeiden, falls du das willst!
-                aufgabenDB.aufgabenListe = aufgabenDB.aufgabenListe.Distinct().ToList();
-                EditorUtility.SetDirty(aufgabenDB);
-                AssetDatabase.SaveAssets();
-                Debug.Log($"{count} Aufgaben importiert und AufgabenDB aktualisiert ({aufgabenDB.aufgabenListe.Count} Aufgaben insgesamt).");
-            }
-            else
-            {
-                Debug.LogWarning("AufgabenDB nicht gefunden!");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Kein AufgabenDB Asset im Zielordner gefunden – AufgabenDB muss im selben Ordner liegen oder passe 'saveFolder' entsprechend an.");
-        }
+        
+        Debug.Log(zeilen.Length + " Aufgaben zur Datenbank hinzugefÃ¼gt.");
+        aufgabenTextListe = ""; // Feld leeren
     }
 }

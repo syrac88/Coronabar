@@ -1,8 +1,8 @@
-using UnityEngine;
-
-[CreateAssetMenu(fileName = "NeueAufgabe", menuName = "Spiel/Aufgabe", order = 1)]
-public class Aufgabe : ScriptableObject
+[System.Serializable]
+public class Aufgabe
 {
-    [TextArea(2, 5)]  // Textbereich im Inspector mit mehrzeiliger Eingabe
-    public string aufgabenText;  // Der Text der Aufgabe
+    public int id;
+    public string textDE;
+    public string textEN;
+    // Hier kannst du später leicht weitere Sprachen oder Felder (z.B. Sensor-IDs) ergänzen
 }

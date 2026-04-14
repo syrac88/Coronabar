@@ -27,8 +27,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     public TMP_Text vipNameText;          // Textfeld für Gewinnername VIP
 
     //Minigamestarten
-    private int completedTasks = 0;
-    public int tasksToComplete = 3; // Anzahl bis Minispiel startet
+    //public int tasksToComplete = 1; // Anzahl bis Minispiel startet  = im TaskFieldManager definiert
     private int minigameIndex = 1; // 1 = Minispiel01, 2 = Minispiel02
 
     // Verknüpft jeden Spieler (über dessen ActorNumber) mit seinem PlayerFrame im UI
@@ -371,6 +370,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
                 if (index == 1) go.GetComponent<Minispiel01>().TriggerMinigameStart();
                 else if (index == 2) go.GetComponent<Minispiel02>().TriggerMinigameStart();
                 else if (index == 3) go.GetComponent<Minispiel03>().TriggerMinigameStart();
+                else if (index == 4) go.GetComponent<Minispiel04>().TriggerMinigameStart();
             }
             else
             {
@@ -451,8 +451,6 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
                 minigameIndex = 1; // danach wieder Minispiel 1
             }
         }
-
-        completedTasks = 0; // Zähler zurücksetzen
     }
 
 

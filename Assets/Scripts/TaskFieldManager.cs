@@ -25,7 +25,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
     private int erledigteAufgabenCounter = 0;
 
     // 🔹 NEU: Schwellwert bis Minispiel startet
-    [SerializeField] private int aufgabenBisMinispiel = 3;
+    [SerializeField] private int aufgabenBisMinispiel = 1; // wird in Start überschrieben
 
     void Start()
     {
@@ -34,6 +34,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
         buttonErledigt.onClick.AddListener(OnTaskDoneClicked);
 
         RefreshView();  // Initiale Ansicht erzeugen
+        aufgabenBisMinispiel = 3; //Runden bis Minigame
     }
 
     // Wird immer bei Property-Updates aufgerufen
@@ -43,8 +44,12 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
     }
 
     // Updatet die UI nach aktuellen Room Properties
+    // Updatet die UI nach aktuellen Room Properties
     void RefreshView()
     {
+        // Sicherheitscheck: Sind wir überhaupt in einem Raum?
+        if (PhotonNetwork.CurrentRoom == null) return;
+
         var props = PhotonNetwork.CurrentRoom.CustomProperties;
 
         int taskOwner = props.ContainsKey(KEY_OWNER) ? (int)props[KEY_OWNER] : -1;
@@ -67,17 +72,33 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
         }
         else if (taskStatus == "active" && taskIndex >= 0)
         {
-            // Aufgabe aktiv, alle sehen sie, nur Besitzer „Erledigt“-Button
+            // Aufgabe aktiv, alle sehen sie, nur Besitzer sieht „Erledigt“-Button
             if (aufgabenDatenbank != null && taskIndex < aufgabenDatenbank.aufgabenListe.Count)
             {
-                textAufgabe.text = aufgabenDatenbank.aufgabenListe[taskIndex].aufgabenText;
-                textAufgabe.gameObject.SetActive(true);  // Frage sichtbar machen
+                // Wir holen uns das Aufgaben-Objekt aus der Liste
+                Aufgabe aufgabe = aufgabenDatenbank.aufgabenListe[taskIndex];
+
+                // Sprachlogik: Hier wird entschieden, welcher Text angezeigt wird
+                // (Später kannst du 'aktuelleSprache' über ein Menü steuern)
+                string sprache = "DE"; 
+
+                if (sprache == "EN") 
+                {
+                    textAufgabe.text = aufgabe.textEN;
+                } 
+                else 
+                {
+                    textAufgabe.text = aufgabe.textDE;
+                }
+
+                textAufgabe.gameObject.SetActive(true); // Text sichtbar machen
             }
             else
             {
                 textAufgabe.text = "Aufgabe unbekannt";
-                textAufgabe.gameObject.SetActive(true);  // Auch sichtbar, wenn unbekannt
+                textAufgabe.gameObject.SetActive(true);
             }
+            
             buttonAufgabe.gameObject.SetActive(false);
             buttonErledigt.gameObject.SetActive(iAmOwner);
         }
@@ -148,7 +169,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
 
         // --- NEU: Aufgaben-Zähler erhöhen ---
         erledigteAufgabenCounter++;
-
+        Debug.Log("erledigteAufgabenCounter:" + erledigteAufgabenCounter + "  (Aufgaben bis Minispiel: " + aufgabenBisMinispiel + ")");
         // Wenn wir mind. X Aufgaben erledigt haben → Minispiel starten
         if (erledigteAufgabenCounter >= aufgabenBisMinispiel)
         {
