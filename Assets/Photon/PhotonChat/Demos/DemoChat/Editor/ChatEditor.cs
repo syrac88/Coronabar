@@ -73,7 +73,7 @@ namespace Photon.Chat.Editor
             if (this.cGui == null)
             {
                 #if UNITY_6000_0_OR_NEWER
-                cGui = FindFirstObjectByType<ChatGui>();
+                cGui = FindAnyObjectByType<ChatGui>();
                 #else
                 cGui = FindObjectOfType<ChatGui>();
                 #endif

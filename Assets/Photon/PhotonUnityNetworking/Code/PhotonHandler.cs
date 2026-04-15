@@ -36,7 +36,7 @@ namespace Photon.Pun
                 if (instance == null)
                 {
                     #if UNITY_6000_0_OR_NEWER
-                    instance = FindFirstObjectByType<PhotonHandler>();
+                    instance = FindAnyObjectByType<PhotonHandler>();
                     #else
                     instance = FindObjectOfType<PhotonHandler>();
                     #endif

@@ -13,8 +13,8 @@ using Hashtable = ExitGames.Client.Photon.Hashtable;
 public class GameRoomManager : MonoBehaviourPunCallbacks
 {
     [Header("UI")]
-    public Transform playerListParent;             // UI-Container mit Horizontal Layout Group für die PlayerFrames
-    public GameObject playerFramePrefab;           // Prefab für die Spieler-Kachel (mit Namen, Punkten etc.)
+    public Transform playerListParent;             // UI-Container mit Horizontal Layout Group fï¿½r die PlayerFrames
+    public GameObject playerFramePrefab;           // Prefab fï¿½r die Spieler-Kachel (mit Namen, Punkten etc.)
     public GameObject aufgabenfeldPrefab;     // Dein Aufgabenfeld Prefab zum Instanziieren
     public TMP_Text textBarName;            // Barname - Schild
     public Sprite[] charakterSprites;
@@ -23,25 +23,25 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     //VIP
     [Header("VIP UI")]
     public GameObject vipPanel;           // VIP Panel GameObject (Inspector zuteilen)
-    public Image vipCharacterImage;       // Image für Charakterbild im VIP Panel
-    public TMP_Text vipNameText;          // Textfeld für Gewinnername VIP
+    public Image vipCharacterImage;       // Image fï¿½r Charakterbild im VIP Panel
+    public TMP_Text vipNameText;          // Textfeld fï¿½r Gewinnername VIP
 
     //Minigamestarten
     //public int tasksToComplete = 1; // Anzahl bis Minispiel startet  = im TaskFieldManager definiert
     private int minigameIndex = 1; // 1 = Minispiel01, 2 = Minispiel02
 
-    // Verknüpft jeden Spieler (über dessen ActorNumber) mit seinem PlayerFrame im UI
+    // Verknï¿½pft jeden Spieler (ï¿½ber dessen ActorNumber) mit seinem PlayerFrame im UI
     private Dictionary<int, GameObject> playerFrames = new Dictionary<int, GameObject>();
 
     /// <summary>
-    /// Initialisiert alle aktuell anwesenden Spieler und verknüpft den Glas-Button.
+    /// Initialisiert alle aktuell anwesenden Spieler und verknï¿½pft den Glas-Button.
     /// </summary>
     void Start()
     {
         textBarName.text = PhotonNetwork.CurrentRoom.Name;
 
-        // Canvas finden – automatisch oder über eine UI-"Tag"-Logik
-        var canvas = FindFirstObjectByType<Canvas>();
+        // Canvas finden ï¿½ automatisch oder ï¿½ber eine UI-"Tag"-Logik
+        var canvas = FindAnyObjectByType<Canvas>();
         if (canvas != null && aufgabenfeldPrefab != null)
         {
             aufgabenfeldInstance = Instantiate(aufgabenfeldPrefab, canvas.transform);
@@ -79,7 +79,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
             aufgabenfeldInstance.SetActive(visible);
         else
         {
-            // Fallback für "lost reference" – per Name suchen!
+            // Fallback fï¿½r "lost reference" ï¿½ per Name suchen!
             var go = GameObject.Find("Aufgabenfeld(Clone)");
             if (go != null) go.SetActive(visible);
         }
@@ -124,7 +124,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         return 0;
     }
 
-    // UpdateTotalPointsUI analog zu UpdatePointsUI – siehe unten!
+    // UpdateTotalPointsUI analog zu UpdatePointsUI ï¿½ siehe unten!
     private void UpdateTotalPointsUI(int actorNumber, int points)
     {
         if (playerFrames.TryGetValue(actorNumber, out GameObject frame))
@@ -146,7 +146,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     }
 
     /// <summary>
-    /// Wird aufgerufen, wenn ein Spieler den Raum verlässt.
+    /// Wird aufgerufen, wenn ein Spieler den Raum verlï¿½sst.
     /// Entfernt dessen PlayerFrame.
     /// </summary>
     public override void OnPlayerLeftRoom(Player otherPlayer)
@@ -174,14 +174,14 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         var frameBehaviour = frame.GetComponent<PlayerFrameBehaviour>();
         if (frameBehaviour != null)
         {
-            // Setze ActorNumber für Erkennung durch PlayerFrameBehaviour (wichtig für lokalen Spieler)
+            // Setze ActorNumber fï¿½r Erkennung durch PlayerFrameBehaviour (wichtig fï¿½r lokalen Spieler)
             frameBehaviour.actorNumber = player.ActorNumber;
 
             // Name
             if (frameBehaviour.nameText != null)
                 frameBehaviour.nameText.text = player.NickName;
 
-            // Punktezähler
+            // Punktezï¿½hler
             if (frameBehaviour.pointsText != null)
                 frameBehaviour.pointsText.text = "0";
 
@@ -209,7 +209,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
     /// <summary>
     /// Holt die Punkte eines Spielers aus dessen Custom Properties.
-    /// Wenn nicht vorhanden, 0 zurück.
+    /// Wenn nicht vorhanden, 0 zurï¿½ck.
     /// </summary>
     /// <param name="player">Der Spieler</param>
     /// <returns>Punktezahl</returns>
@@ -223,17 +223,17 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     }
 
     /// <summary>
-    /// Wird beim Klick auf das Glas ausgeführt.
-    /// Erhöht den Punktestand des lokalen Spielers um 1.
+    /// Wird beim Klick auf das Glas ausgefï¿½hrt.
+    /// Erhï¿½ht den Punktestand des lokalen Spielers um 1.
     /// </summary>
 
 
     /// <summary>
-    /// Wird aufgerufen, wenn sich eine Spieler-Eigenschaft ändert.
-    /// Hier wird die Punktestand-Anzeige für den Spieler aktualisiert.
+    /// Wird aufgerufen, wenn sich eine Spieler-Eigenschaft ï¿½ndert.
+    /// Hier wird die Punktestand-Anzeige fï¿½r den Spieler aktualisiert.
     /// </summary>
-    /// <param name="targetPlayer">Spieler dessen Eigenschaften geändert wurden</param>
-    /// <param name="changedProps">Geänderte Eigenschaften</param>
+    /// <param name="targetPlayer">Spieler dessen Eigenschaften geï¿½ndert wurden</param>
+    /// <param name="changedProps">Geï¿½nderte Eigenschaften</param>
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
     {
         if (changedProps.ContainsKey("Points"))
@@ -265,7 +265,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
 
     /// <summary>
-    /// Aktualisiert das UI-Feld "Text_PointsRound" im PlayerFrame für den Spieler.
+    /// Aktualisiert das UI-Feld "Text_PointsRound" im PlayerFrame fï¿½r den Spieler.
     /// </summary>
     /// <param name="actorNumber">ActorNumber des Spielers</param>
     /// <param name="points">Neuer Punktestand</param>
@@ -417,7 +417,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     {
         Hashtable newProps = new Hashtable
     {
-        { "TaskOwner", -1 },    // Oder setze direkt den nächsten Spieler als Besitzer, wenn gewünscht
+        { "TaskOwner", -1 },    // Oder setze direkt den nï¿½chsten Spieler als Besitzer, wenn gewï¿½nscht
         { "TaskIndex", -1 },
         { "TaskStatus", "waiting" }
     };

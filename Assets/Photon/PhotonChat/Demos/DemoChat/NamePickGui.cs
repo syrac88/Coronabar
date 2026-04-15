@@ -23,7 +23,7 @@ namespace Photon.Chat.Demo
         public void Start()
         {
             #if UNITY_6000_0_OR_NEWER
-            this.chatNewComponent = FindFirstObjectByType<ChatGui>();
+            this.chatNewComponent = FindAnyObjectByType<ChatGui>();
             #else
             this.chatNewComponent = FindObjectOfType<ChatGui>();
             #endif
@@ -48,7 +48,7 @@ namespace Photon.Chat.Demo
         public void StartChat()
         {
             #if UNITY_6000_0_OR_NEWER
-            ChatGui chatNewComponent = FindFirstObjectByType<ChatGui>();
+            ChatGui chatNewComponent = FindAnyObjectByType<ChatGui>();
             #else
             ChatGui chatNewComponent = FindObjectOfType<ChatGui>();
             #endif

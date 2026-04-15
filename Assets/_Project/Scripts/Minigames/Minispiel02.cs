@@ -7,7 +7,7 @@ using Photon.Pun;
 using Photon.Realtime;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-public class Minispiel01 : MonoBehaviourPun
+public class Minispiel02 : MonoBehaviourPun
 {
     [Header("UI Elemente")]
     public GameObject minigamePanel;
@@ -18,6 +18,14 @@ public class Minispiel01 : MonoBehaviourPun
     public GameObject resultsPanel;
     public TMP_Text resultsText;
     public TMP_Text TextCloseCountdown;
+
+    // Flag zum Merken, wo der Button zuletzt war
+    private bool toggleX = false;
+
+    // Feste X-Positionen
+    [SerializeField] private float fixedX_A = -270f;
+    [SerializeField] private float fixedX_B = 270f;
+
 
     // Spielzeit in Sekunden
     private float countdownTime = 20f;
@@ -163,7 +171,7 @@ public class Minispiel01 : MonoBehaviourPun
     }
 
     /// <summary>
-    /// Zählt auf lokalen Klick
+    /// Zï¿½hlt auf lokalen Klick
     /// </summary>
     private void OnClickButtonPressed()
     {
@@ -174,6 +182,19 @@ public class Minispiel01 : MonoBehaviourPun
 
         if (TextCounter != null)
             TextCounter.text = localClicks.ToString();
+
+
+        RectTransform buttonRect = clickButton.GetComponent<RectTransform>();
+
+        // Ausgangsposition holen
+        Vector2 pos = buttonRect.anchoredPosition;
+
+        // Umschalten und neue X-Position setzen
+        toggleX = !toggleX;
+        pos.x = toggleX ? fixedX_A : fixedX_B;
+
+        // Zurï¿½ckschreiben
+        buttonRect.anchoredPosition = pos;
     }
 
     /// <summary>
@@ -199,17 +220,17 @@ public class Minispiel01 : MonoBehaviourPun
         countdownText.text = "";
         gameRunning = false;
 
-        // Nach 3 Sekunden Minispiel schließen
+        // Nach 3 Sekunden Minispiel schlieï¿½en
         StartCoroutine(CloseAfterDelay(20f));
     }
 
     /// <summary>
-    /// Verzögerter Aufruf zur Minispiel-Schließung
+    /// Verzï¿½gerter Aufruf zur Minispiel-Schlieï¿½ung
     /// </summary>
     private IEnumerator CloseAfterDelay(float delay)
     {
         float t = delay;
-        // Optional: Zeige "Minispiel schließt in X..." o.ä.
+        // Optional: Zeige "Minispiel schlieï¿½t in X..." o.ï¿½.
         if (TextCloseCountdown != null)
             TextCloseCountdown.gameObject.SetActive(true);
 
@@ -224,7 +245,7 @@ public class Minispiel01 : MonoBehaviourPun
 
         if (TextCloseCountdown != null)
         {
-            TextCloseCountdown.text = "";           // Optional, um Text zu löschen
+            TextCloseCountdown.text = "";           // Optional, um Text zu lï¿½schen
             TextCloseCountdown.gameObject.SetActive(false);
         }
 
@@ -232,7 +253,7 @@ public class Minispiel01 : MonoBehaviourPun
     }
 
     /// <summary>
-    /// Schließt Minispiel-UI und informiert GameRoomManager über Gewinner
+    /// Schlieï¿½t Minispiel-UI und informiert GameRoomManager ï¿½ber Gewinner
     /// </summary>
     public void CloseMinigame()
     {
@@ -260,25 +281,25 @@ public class Minispiel01 : MonoBehaviourPun
                 }
             }
 
-            var gameRoomManager = FindFirstObjectByType<GameRoomManager>();
+            var gameRoomManager = FindAnyObjectByType<GameRoomManager>();
             if (gameRoomManager != null)
             {
                 // Gewinner an GameRoomManager melden
                 gameRoomManager.photonView.RPC("NotifyWinnerToGameManager", RpcTarget.All, winnerId);
-                // Nächsten Task-Owner zuweisen
+                // Nï¿½chsten Task-Owner zuweisen
                 gameRoomManager.AssignNextTaskOwner();
                 // Aufgabenfeld wieder sichtbar machen
                 gameRoomManager.photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, true);
             }
 
-            // Netzwerk-Instanz zerstören
+            // Netzwerk-Instanz zerstï¿½ren
             PhotonNetwork.Destroy(gameObject);
         }
     }
 
     private void Awake()
     {
-        // Füge Minispiel zur Canvas hinzu
+        // Fï¿½ge Minispiel zur Canvas hinzu
         if (canvasTransform == null)
         {
             GameObject c = GameObject.Find("Canvas");

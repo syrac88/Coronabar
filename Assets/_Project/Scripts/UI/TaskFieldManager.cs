@@ -165,7 +165,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
         };
         PhotonNetwork.CurrentRoom.SetCustomProperties(newProps);
 
-        FindFirstObjectByType<GameRoomManager>().AddRoundPointsToTotalForAll();
+        FindAnyObjectByType<GameRoomManager>().AddRoundPointsToTotalForAll();
 
         // --- NEU: Aufgaben-Zähler erhöhen ---
         erledigteAufgabenCounter++;
@@ -179,7 +179,7 @@ public class TaskFieldManager : MonoBehaviourPunCallbacks
             // Nur der MasterClient soll das Minispiel starten
             if (PhotonNetwork.IsMasterClient)
             {
-                var gameRoomManager = FindFirstObjectByType<GameRoomManager>();
+                var gameRoomManager = FindAnyObjectByType<GameRoomManager>();
                 if (gameRoomManager != null)
                 {
                     gameRoomManager.StartMinigameAfterReset();

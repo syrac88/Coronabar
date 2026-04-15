@@ -36,7 +36,7 @@ namespace Photon.Chat.Demo
             }
             #else
             #if UNITY_6000_0_OR_NEWER
-            ChatGui cGui = FindFirstObjectByType<ChatGui>(); // this could be a serialized reference instead of finding this each time
+            ChatGui cGui = FindAnyObjectByType<ChatGui>(); // this could be a serialized reference instead of finding this each time
             #else
             ChatGui cGui = FindObjectOfType<ChatGui>(); // this could be a serialized reference instead of finding this each time
             #endif
