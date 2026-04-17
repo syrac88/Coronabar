@@ -53,7 +53,7 @@ public class DebugMinigameStarter : MonoBehaviour
         GameRoomManager manager = FindAnyObjectByType<GameRoomManager>();
         if (manager != null)
         {
-            manager.photonView.RPC("ForceStartMinigameRPC", RpcTarget.All, selectedIndex);
+            manager.StartMinigame(selectedIndex);
         }
         
         debugPanel.SetActive(false);

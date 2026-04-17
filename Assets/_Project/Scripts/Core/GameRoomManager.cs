@@ -347,53 +347,39 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
         Debug.Log($"Starte Minigame {index}");
 
+        // Sicherheitshalber das Aufgabenfeld bei allen ausblenden (wichtig für den Debug-Force-Start)
+        photonView.RPC(nameof(SetAufgabenfeldVisible), RpcTarget.All, false);
+
         string prefabName = $"PhotonPrefabs/Minispiel0{index}_PrefabRoot";
 
+        // PhotonNetwork.Instantiate synchronisiert das Objekt automatisch zu allen Clients!
         var go = PhotonNetwork.Instantiate(prefabName, Vector3.zero, Quaternion.identity);
         var mainCanvas = GameObject.Find("Canvas");
 
         if (mainCanvas != null)
         {
+            // false sorgt dafür, dass die lokalen UI-Skalierungen erhalten bleiben
             go.transform.SetParent(mainCanvas.transform, false);
 
-            // Minigame-Script ermitteln
-            var minigame = go.GetComponent<MonoBehaviour>() as MonoBehaviour;
-
-            // Falls alle deine Minispiele z. B. von einer gemeinsamen Basisklasse "BaseMinigame" oder Interface IMinigame erben:
-            // var minigame = go.GetComponent<IMinigame>();
+            var minigame = go.GetComponent<MonoBehaviour>();
 
             if (minigame != null)
             {
-                photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, false);
-
-                // Bei deinem aktuellen Setup musst du den richtigen Typ casten, um TriggerMinigameStart() aufzurufen
-                if (index == 1) go.GetComponent<Minispiel01>().TriggerMinigameStart();
-                else if (index == 2) go.GetComponent<Minispiel02>().TriggerMinigameStart();
-                else if (index == 3) go.GetComponent<Minispiel03>().TriggerMinigameStart();
-                else if (index == 4) go.GetComponent<Minispiel04>().TriggerMinigameStart();
+                // Das Triggern des Start-RPCs, damit das UI bei allen Clients erscheint
+                if (index == 1) go.GetComponent<Minispiel01>()?.TriggerMinigameStart();
+                else if (index == 2) go.GetComponent<Minispiel02>()?.TriggerMinigameStart();
+                else if (index == 3) go.GetComponent<Minispiel03>()?.TriggerMinigameStart();
+                else if (index == 4) go.GetComponent<Minispiel04>()?.TriggerMinigameStart();
             }
             else
             {
-                Debug.LogWarning($"Minispiel{index} Script oder minigamePanel nicht gefunden!");
+                Debug.LogWarning($"Minispiel{index} Script nicht auf dem Prefab gefunden!");
             }
         }
         else
         {
-            Debug.LogError("Canvas wurde nicht gefunden!");
+            Debug.LogError("Canvas wurde nicht gefunden! Prefab hängt im leeren Raum.");
         }
-    }
-
-    [PunRPC]
-    public void ForceStartMinigameRPC(int index)
-    {
-        // Diese Logik stellt sicher, dass das alte Aufgabenfeld verschwindet
-        // und das Minispiel bei jedem instanziiert wird.
-        if (aufgabenfeldInstance != null) aufgabenfeldInstance.SetActive(false);
-        
-        // Hier nutzt du deine vorhandene Logik zum Starten
-        // (Ich gehe davon aus, dass du ein Array oder eine Logik hast, die 'minigameIndex' nutzt)
-        string prefabName = "Minispiel" + index.ToString("D2"); // Erzeugt "Minispiel01", "Minispiel02" etc.
-        PhotonNetwork.Instantiate(prefabName, Vector3.zero, Quaternion.identity);
     }
 
     [PunRPC]
