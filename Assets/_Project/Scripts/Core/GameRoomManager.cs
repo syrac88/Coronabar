@@ -299,7 +299,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
     public void ArrangePlayerFrames()
     {
-        float spacing = 190f; // Abstand zwischen den PlayerFrames
+        float spacing = 250f; // Abstand zwischen den PlayerFrames
         int count = playerListParent.childCount;
 
         for (int i = 0; i < count; i++)

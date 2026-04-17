@@ -443,12 +443,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minigamePanel: {fileID: 3733199983492051535}
   countdownText: {fileID: 7287006324473155162}
-  TextCounter: {fileID: 9222975671203895181}
-  clickButton: {fileID: 2432129706035589402}
   infoText: {fileID: 2456680256875509981}
   resultsPanel: {fileID: 6236076659014700163}
   resultsText: {fileID: 7605674989014375309}
   TextCloseCountdown: {fileID: 3900029655967186894}
+  clickButton: {fileID: 2432129706035589402}
+  TextCounter: {fileID: 9222975671203895181}
 --- !u!114 &4511928367089876828
 MonoBehaviour:
   m_ObjectHideFlags: 0
