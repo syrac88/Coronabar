@@ -8,10 +8,12 @@ public class DebugMinigameStarter : MonoBehaviour
 {
     public TMP_Dropdown gameDropdown;
     public GameObject debugPanel;
-    public int maxMinigames = 4; // Hier einfach die Anzahl deiner Spiele eintragen
+    
+    private GameRoomManager manager;
 
     void Start()
     {
+        manager = FindAnyObjectByType<GameRoomManager>();
         SetupDropdown();
         debugPanel.SetActive(false);
     }
@@ -28,12 +30,15 @@ public class DebugMinigameStarter : MonoBehaviour
 
     void SetupDropdown()
     {
+        if (manager == null || gameDropdown == null) return;
+
         gameDropdown.ClearOptions();
         List<string> options = new List<string>();
 
-        for (int i = 1; i <= maxMinigames; i++)
+        // Zieht sich automatisch die Anzahl der Spiele aus dem Manager!
+        for (int i = 0; i < manager.minigamePrefabs.Length; i++)
         {
-            options.Add("Minispiel " + i.ToString("D2"));
+            options.Add($"Minispiel {(i + 1):D2} ({manager.minigamePrefabs[i]})");
         }
 
         gameDropdown.AddOptions(options);
@@ -47,12 +52,9 @@ public class DebugMinigameStarter : MonoBehaviour
             return;
         }
 
-        // +1 weil Dropdown bei 0 startet, unsere Spiele aber bei 1
-        int selectedIndex = gameDropdown.value + 1;
-        
-        GameRoomManager manager = FindAnyObjectByType<GameRoomManager>();
         if (manager != null)
         {
+            int selectedIndex = gameDropdown.value + 1;
             manager.StartMinigame(selectedIndex);
         }
         

@@ -27,8 +27,15 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     public TMP_Text vipNameText;          // Textfeld f�r Gewinnername VIP
 
     //Minigamestarten
-    //public int tasksToComplete = 1; // Anzahl bis Minispiel startet  = im TaskFieldManager definiert
-    private int minigameIndex = 1; // 1 = Minispiel01, 2 = Minispiel02
+    [Header("Minispiele (Namen der Prefabs im Resources/PhotonPrefabs Ordner)")]
+    public string[] minigamePrefabs = new string[] { 
+        "Minispiel01_PrefabRoot", 
+        "Minispiel02_PrefabRoot", 
+        "Minispiel03_PrefabRoot", 
+        "Minispiel04_PrefabRoot" 
+    };
+
+    private int minigameIndex = 0; // Wir starten jetzt logisch bei Index 0
 
     // Verkn�pft jeden Spieler (�ber dessen ActorNumber) mit seinem PlayerFrame im UI
     private Dictionary<int, GameObject> playerFrames = new Dictionary<int, GameObject>();
@@ -345,40 +352,38 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     {
         if (!PhotonNetwork.IsMasterClient) return;
 
-        Debug.Log($"Starte Minigame {index}");
+        int actualIndex = index - 1; // UI Index ist 1-basiert, Array ist 0-basiert
 
-        // Sicherheitshalber das Aufgabenfeld bei allen ausblenden (wichtig für den Debug-Force-Start)
+        if (actualIndex < 0 || actualIndex >= minigamePrefabs.Length)
+        {
+            Debug.LogError($"Ungültiger Minispiel-Index: {index}. Es gibt nur {minigamePrefabs.Length} Spiele.");
+            return;
+        }
+
+        Debug.Log($"Starte Minigame {minigamePrefabs[actualIndex]}");
+
+        // Aufgabenfeld ausblenden
         photonView.RPC(nameof(SetAufgabenfeldVisible), RpcTarget.All, false);
 
-        string prefabName = $"PhotonPrefabs/Minispiel0{index}_PrefabRoot";
+        string prefabName = $"PhotonPrefabs/{minigamePrefabs[actualIndex]}";
 
-        // PhotonNetwork.Instantiate synchronisiert das Objekt automatisch zu allen Clients!
         var go = PhotonNetwork.Instantiate(prefabName, Vector3.zero, Quaternion.identity);
         var mainCanvas = GameObject.Find("Canvas");
 
         if (mainCanvas != null)
         {
-            // false sorgt dafür, dass die lokalen UI-Skalierungen erhalten bleiben
             go.transform.SetParent(mainCanvas.transform, false);
 
-            var minigame = go.GetComponent<MonoBehaviour>();
-
+            // Anstatt GetComponent<Minispiel01> fragen wir die Basisklasse
+            var minigame = go.GetComponent<MinigameBase>();
             if (minigame != null)
             {
-                // Das Triggern des Start-RPCs, damit das UI bei allen Clients erscheint
-                if (index == 1) go.GetComponent<Minispiel01>()?.TriggerMinigameStart();
-                else if (index == 2) go.GetComponent<Minispiel02>()?.TriggerMinigameStart();
-                else if (index == 3) go.GetComponent<Minispiel03>()?.TriggerMinigameStart();
-                else if (index == 4) go.GetComponent<Minispiel04>()?.TriggerMinigameStart();
+                minigame.TriggerMinigameStart();
             }
             else
             {
-                Debug.LogWarning($"Minispiel{index} Script nicht auf dem Prefab gefunden!");
+                Debug.LogWarning($"Kein MinigameBase Script auf dem Prefab {prefabName} gefunden!");
             }
-        }
-        else
-        {
-            Debug.LogError("Canvas wurde nicht gefunden! Prefab hängt im leeren Raum.");
         }
     }
 
@@ -427,26 +432,13 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
         if (PhotonNetwork.IsMasterClient)
         {
-            if (minigameIndex == 1)
-            {
-                StartMinigame(1);
-                minigameIndex = 2; // danach Minispiel 2
-            }
-            else if (minigameIndex == 2)
-            {
-                StartMinigame(2);
-                minigameIndex = 3; // danach Minispiel 3
-            }
-            else if (minigameIndex == 3)
-            {
-                StartMinigame(3);
-                minigameIndex = 4; // danach wieder Minispiel 1
-            }
-            else if (minigameIndex == 4)
-            {
-                StartMinigame(4);
-                minigameIndex = 1; // danach wieder Minispiel 1
-            }
+            if (minigamePrefabs.Length == 0) return;
+
+            // Startet das aktuelle Minispiel (+1 weil die Startfunktion 1-basiert arbeitet)
+            StartMinigame(minigameIndex + 1);
+
+            // Zählt hoch und fängt bei 0 wieder an, wenn das Ende erreicht ist (Modulo-Operator)
+            minigameIndex = (minigameIndex + 1) % minigamePrefabs.Length;
         }
     }
 
