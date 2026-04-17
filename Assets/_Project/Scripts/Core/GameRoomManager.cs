@@ -383,7 +383,18 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         }
     }
 
-
+    [PunRPC]
+    public void ForceStartMinigameRPC(int index)
+    {
+        // Diese Logik stellt sicher, dass das alte Aufgabenfeld verschwindet
+        // und das Minispiel bei jedem instanziiert wird.
+        if (aufgabenfeldInstance != null) aufgabenfeldInstance.SetActive(false);
+        
+        // Hier nutzt du deine vorhandene Logik zum Starten
+        // (Ich gehe davon aus, dass du ein Array oder eine Logik hast, die 'minigameIndex' nutzt)
+        string prefabName = "Minispiel" + index.ToString("D2"); // Erzeugt "Minispiel01", "Minispiel02" etc.
+        PhotonNetwork.Instantiate(prefabName, Vector3.zero, Quaternion.identity);
+    }
 
     [PunRPC]
     public void NotifyWinnerToGameManager(int winnerActorId)
