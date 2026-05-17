@@ -13,8 +13,8 @@ using Hashtable = ExitGames.Client.Photon.Hashtable;
 public class GameRoomManager : MonoBehaviourPunCallbacks
 {
     [Header("UI")]
-    public Transform playerListParent;             // UI-Container mit Horizontal Layout Group f�r die PlayerFrames
-    public GameObject playerFramePrefab;           // Prefab f�r die Spieler-Kachel (mit Namen, Punkten etc.)
+    public Transform playerListParent;             // UI-Container mit Horizontal Layout Group für die PlayerFrames
+    public GameObject playerFramePrefab;           // Prefab für die Spieler-Kachel (mit Namen, Punkten etc.)
     public GameObject aufgabenfeldPrefab;     // Dein Aufgabenfeld Prefab zum Instanziieren
     public TMP_Text textBarName;            // Barname - Schild
     public Sprite[] charakterSprites;
@@ -23,8 +23,8 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     //VIP
     [Header("VIP UI")]
     public GameObject vipPanel;           // VIP Panel GameObject (Inspector zuteilen)
-    public Image vipCharacterImage;       // Image f�r Charakterbild im VIP Panel
-    public TMP_Text vipNameText;          // Textfeld f�r Gewinnername VIP
+    public Image vipCharacterImage;       // Image für Charakterbild im VIP Panel
+    public TMP_Text vipNameText;          // Textfeld für Gewinnername VIP
 
     //Minigamestarten
     [Header("Minispiele (Namen der Prefabs im Resources/PhotonPrefabs Ordner)")]
@@ -37,36 +37,54 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
     private int minigameIndex = 0; // Wir starten jetzt logisch bei Index 0
 
-    // Verkn�pft jeden Spieler (�ber dessen ActorNumber) mit seinem PlayerFrame im UI
+    // Verknüpft jeden Spieler (über dessen ActorNumber) mit seinem PlayerFrame im UI
     private Dictionary<int, GameObject> playerFrames = new Dictionary<int, GameObject>();
 
+    // NEU FÜR ARCADE MODUS
+    public GameObject masterMinigameButton; 
+    public bool isMinigameMode = false;
+
     /// <summary>
-    /// Initialisiert alle aktuell anwesenden Spieler und verkn�pft den Glas-Button.
+    /// Initialisiert alle aktuell anwesenden Spieler und verknüpft den Glas-Button.
     /// </summary>
     void Start()
     {
         textBarName.text = PhotonNetwork.CurrentRoom.Name;
 
-        // Canvas finden � automatisch oder �ber eine UI-"Tag"-Logik
+        // Canvas finden
         var canvas = FindAnyObjectByType<Canvas>();
-        if (canvas != null && aufgabenfeldPrefab != null)
+        
+        // Modus aus Property lesen
+        if (PhotonNetwork.CurrentRoom.CustomProperties.TryGetValue("MinigameMode", out object mode))
+            isMinigameMode = (bool)mode;
+
+        // Aufgabenfeld oder Button init
+        if (!isMinigameMode)
         {
-            aufgabenfeldInstance = Instantiate(aufgabenfeldPrefab, canvas.transform);
+            // --- NORMALER MODUS ---
+            if (canvas != null && aufgabenfeldPrefab != null)
+                aufgabenfeldInstance = Instantiate(aufgabenfeldPrefab, canvas.transform);
+            
+            // WICHTIG: Hier den Button explizit ausschalten, falls er im Inspector an war
+            if (masterMinigameButton != null)
+                masterMinigameButton.SetActive(false);
         }
         else
         {
-
+            // --- ARCADE MODUS ---
+            if (masterMinigameButton != null)
+                masterMinigameButton.SetActive(PhotonNetwork.IsMasterClient);
         }
 
         // 
         if (PhotonNetwork.IsMasterClient && PhotonNetwork.CurrentRoom != null)
         {
             Hashtable startProps = new Hashtable
-        {
-            { "TaskOwner", PhotonNetwork.PlayerList[0].ActorNumber },
-            { "TaskIndex", -1 },
-            { "TaskStatus", "waiting" }
-        };
+            {
+                { "TaskOwner", PhotonNetwork.PlayerList[0].ActorNumber },
+                { "TaskIndex", -1 },
+                { "TaskStatus", "waiting" }
+            };
             PhotonNetwork.CurrentRoom.SetCustomProperties(startProps);
         }
 
@@ -86,7 +104,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
             aufgabenfeldInstance.SetActive(visible);
         else
         {
-            // Fallback f�r "lost reference" � per Name suchen!
+            // Fallback für "lost reference" – per Name suchen!
             var go = GameObject.Find("Aufgabenfeld(Clone)");
             if (go != null) go.SetActive(visible);
         }
@@ -131,7 +149,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         return 0;
     }
 
-    // UpdateTotalPointsUI analog zu UpdatePointsUI � siehe unten!
+    // UpdateTotalPointsUI analog zu UpdatePointsUI – siehe unten!
     private void UpdateTotalPointsUI(int actorNumber, int points)
     {
         if (playerFrames.TryGetValue(actorNumber, out GameObject frame))
@@ -153,7 +171,7 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     }
 
     /// <summary>
-    /// Wird aufgerufen, wenn ein Spieler den Raum verl�sst.
+    /// Wird aufgerufen, wenn ein Spieler den Raum verlässt.
     /// Entfernt dessen PlayerFrame.
     /// </summary>
     public override void OnPlayerLeftRoom(Player otherPlayer)
@@ -181,14 +199,14 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         var frameBehaviour = frame.GetComponent<PlayerFrameBehaviour>();
         if (frameBehaviour != null)
         {
-            // Setze ActorNumber f�r Erkennung durch PlayerFrameBehaviour (wichtig f�r lokalen Spieler)
+            // Setze ActorNumber für Erkennung durch PlayerFrameBehaviour (wichtig für lokalen Spieler)
             frameBehaviour.actorNumber = player.ActorNumber;
 
             // Name
             if (frameBehaviour.nameText != null)
                 frameBehaviour.nameText.text = player.NickName;
 
-            // Punktez�hler
+            // Punktezähler
             if (frameBehaviour.pointsText != null)
                 frameBehaviour.pointsText.text = "0";
 
@@ -201,22 +219,14 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
                     frameBehaviour.imagePlayer.sprite = charakterSprites[charID];
                 }
             }
-
-            // Gesamt-Punkte ggf. auch direkt setzen (optional)
-            // if (frameBehaviour.totalPointsText != null) frameBehaviour.totalPointsText.text = "0";
         }
-        else
-        {
-
-        }
-
         ArrangePlayerFrames();
     }
 
 
     /// <summary>
     /// Holt die Punkte eines Spielers aus dessen Custom Properties.
-    /// Wenn nicht vorhanden, 0 zur�ck.
+    /// Wenn nicht vorhanden, 0 zurück.
     /// </summary>
     /// <param name="player">Der Spieler</param>
     /// <returns>Punktezahl</returns>
@@ -230,17 +240,9 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     }
 
     /// <summary>
-    /// Wird beim Klick auf das Glas ausgef�hrt.
-    /// Erh�ht den Punktestand des lokalen Spielers um 1.
+    /// Wird aufgerufen, wenn sich eine Spieler-Eigenschaft ändert.
+    /// Hier wird die Punktestand-Anzeige für den Spieler aktualisiert.
     /// </summary>
-
-
-    /// <summary>
-    /// Wird aufgerufen, wenn sich eine Spieler-Eigenschaft �ndert.
-    /// Hier wird die Punktestand-Anzeige f�r den Spieler aktualisiert.
-    /// </summary>
-    /// <param name="targetPlayer">Spieler dessen Eigenschaften ge�ndert wurden</param>
-    /// <param name="changedProps">Ge�nderte Eigenschaften</param>
     public override void OnPlayerPropertiesUpdate(Player targetPlayer, Hashtable changedProps)
     {
         if (changedProps.ContainsKey("Points"))
@@ -260,22 +262,29 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         if (PhotonNetwork.IsMasterClient)
         {
             Hashtable startProps = new Hashtable
-        {
-            { "TaskOwner", PhotonNetwork.PlayerList[0].ActorNumber },
-            { "TaskIndex", -1 },
-            { "TaskStatus", "waiting" }
-        };
+            {
+                { "TaskOwner", PhotonNetwork.PlayerList[0].ActorNumber },
+                { "TaskIndex", -1 },
+                { "TaskStatus", "waiting" }
+            };
             PhotonNetwork.CurrentRoom.SetCustomProperties(startProps);
-
         }
+    }
+
+    // NEU: Master startet Minispiel
+    public void MasterStartsNextMinigame()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+        int gameId = (minigameIndex % minigamePrefabs.Length) + 1;
+        minigameIndex++;
+        StartMinigame(gameId);
+        if(masterMinigameButton) masterMinigameButton.SetActive(false);
     }
 
 
     /// <summary>
-    /// Aktualisiert das UI-Feld "Text_PointsRound" im PlayerFrame f�r den Spieler.
+    /// Aktualisiert das UI-Feld "Text_PointsRound" im PlayerFrame für den Spieler.
     /// </summary>
-    /// <param name="actorNumber">ActorNumber des Spielers</param>
-    /// <param name="points">Neuer Punktestand</param>
     private void UpdatePointsUI(int actorNumber, int points)
     {
         if (playerFrames.TryGetValue(actorNumber, out GameObject frame))
@@ -322,68 +331,33 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
 
     public void BeendeSpiel()
     {
-        // In Unity Editor stoppen
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
-        // In einer normalen Build-Anwendung beenden
         Application.Quit();
 #endif
     }
 
     public void ToggleAudio()
     {
-        if (Music.Instance == null)
-        {
-            return;
-        }
-
-        if (Music.Instance.isPlaying)
-        {
-            Music.Instance.PauseMusic();
-        }
-        else
-        {
-            Music.Instance.ResumeMusic();
-        }
+        if (Music.Instance == null) return;
+        if (Music.Instance.isPlaying) Music.Instance.PauseMusic(); else Music.Instance.ResumeMusic();
     }
 
     public void StartMinigame(int index)
     {
         if (!PhotonNetwork.IsMasterClient) return;
-
-        int actualIndex = index - 1; // UI Index ist 1-basiert, Array ist 0-basiert
-
-        if (actualIndex < 0 || actualIndex >= minigamePrefabs.Length)
-        {
-            Debug.LogError($"Ungültiger Minispiel-Index: {index}. Es gibt nur {minigamePrefabs.Length} Spiele.");
-            return;
-        }
-
-        Debug.Log($"Starte Minigame {minigamePrefabs[actualIndex]}");
-
-        // Aufgabenfeld ausblenden
+        int actualIndex = index - 1;
+        if (actualIndex < 0 || actualIndex >= minigamePrefabs.Length) return;
         photonView.RPC(nameof(SetAufgabenfeldVisible), RpcTarget.All, false);
-
         string prefabName = $"PhotonPrefabs/{minigamePrefabs[actualIndex]}";
-
         var go = PhotonNetwork.Instantiate(prefabName, Vector3.zero, Quaternion.identity);
         var mainCanvas = GameObject.Find("Canvas");
-
         if (mainCanvas != null)
         {
             go.transform.SetParent(mainCanvas.transform, false);
-
-            // Anstatt GetComponent<Minispiel01> fragen wir die Basisklasse
             var minigame = go.GetComponent<MinigameBase>();
-            if (minigame != null)
-            {
-                minigame.TriggerMinigameStart();
-            }
-            else
-            {
-                Debug.LogWarning($"Kein MinigameBase Script auf dem Prefab {prefabName} gefunden!");
-            }
+            if (minigame != null) minigame.TriggerMinigameStart();
         }
     }
 
@@ -391,109 +365,39 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
     public void NotifyWinnerToGameManager(int winnerActorId)
     {
         Player winner = PhotonNetwork.CurrentRoom.GetPlayer(winnerActorId);
-        if (winner == null)
-        {
-            Debug.LogWarning("Winner Player nicht gefunden!");
-            return;
-        }
-
+        if (winner == null) return;
         vipPanel.SetActive(true);
         vipNameText.text = winner.NickName;
-
-        if (winner.CustomProperties.TryGetValue("CharakterID", out object charIdObj))
-        {
-            int charID = (int)charIdObj;
-            if (charakterSprites != null && charID >= 0 && charID < charakterSprites.Length)
-            {
-                vipCharacterImage.sprite = charakterSprites[charID];
-            }
-        }
-        else
-        {
-            Debug.LogWarning("CharakterID nicht gefunden bei Gewinner");
-        }
+        if (winner.CustomProperties.TryGetValue("CharakterID", out object charIdObj) && charakterSprites != null)
+            vipCharacterImage.sprite = charakterSprites[(int)charIdObj];
     }
-
 
     public void ResetTaskStatusForMinigame()
     {
-        Hashtable newProps = new Hashtable
-    {
-        { "TaskOwner", -1 },    // Oder setze direkt den n�chsten Spieler als Besitzer, wenn gew�nscht
-        { "TaskIndex", -1 },
-        { "TaskStatus", "waiting" }
-    };
-        PhotonNetwork.CurrentRoom.SetCustomProperties(newProps);
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { "TaskOwner", -1 }, { "TaskIndex", -1 }, { "TaskStatus", "waiting" } });
     }
 
     public void StartMinigameAfterReset()
     {
         ResetTaskStatusForMinigame();
-
         if (PhotonNetwork.IsMasterClient)
         {
-            if (minigamePrefabs.Length == 0) return;
-
-            // Startet das aktuelle Minispiel (+1 weil die Startfunktion 1-basiert arbeitet)
             StartMinigame(minigameIndex + 1);
-
-            // Zählt hoch und fängt bei 0 wieder an, wenn das Ende erreicht ist (Modulo-Operator)
             minigameIndex = (minigameIndex + 1) % minigamePrefabs.Length;
         }
     }
 
-
-    public void AssignNextTaskOwner()
-    {
-        StartCoroutine(AssignNextOwnerDelayed());
-        /*
-        Player[] players = PhotonNetwork.PlayerList;
-        if (players.Length == 0)
-            return;
-
-        Hashtable props = PhotonNetwork.CurrentRoom.CustomProperties;
-        int currentOwner = props.ContainsKey("TaskOwner") ? (int)props["TaskOwner"] : -1;
-
-        int ownerIndex = System.Array.FindIndex(players, p => p.ActorNumber == currentOwner);
-        int nextIndex = (ownerIndex + 1) % players.Length;
-        int nextOwner = players[nextIndex].ActorNumber;
-
-        Hashtable newProps = new Hashtable
-        {
-            { "TaskOwner", nextOwner },
-            { "TaskIndex", -1 },
-            { "TaskStatus", "waiting" }
-        };
-
-        PhotonNetwork.CurrentRoom.SetCustomProperties(newProps); */
-    }
+    public void AssignNextTaskOwner() => StartCoroutine(AssignNextOwnerDelayed());
 
     private System.Collections.IEnumerator AssignNextOwnerDelayed()
     {
-        yield return null; // 1 Frame warten
-
+        yield return null; 
         Player[] players = PhotonNetwork.PlayerList;
         if (players.Length == 0) yield break;
-
         Hashtable props = PhotonNetwork.CurrentRoom.CustomProperties;
         int currentOwner = props.ContainsKey("TaskOwner") ? (int)props["TaskOwner"] : -1;
-
         int ownerIndex = System.Array.FindIndex(players, p => p.ActorNumber == currentOwner);
-        int nextIndex = (ownerIndex + 1) % players.Length;
-        int nextOwner = players[nextIndex].ActorNumber;
-
-        Hashtable newProps = new Hashtable
-    {
-        { "TaskOwner", nextOwner },
-        { "TaskIndex", -1 },
-        { "TaskStatus", "waiting" }
-    };
-
-        PhotonNetwork.CurrentRoom.SetCustomProperties(newProps);
+        int nextOwner = players[(ownerIndex + 1) % players.Length].ActorNumber;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { "TaskOwner", nextOwner }, { "TaskIndex", -1 }, { "TaskStatus", "waiting" } });
     }
-
-
-
-
-
 }

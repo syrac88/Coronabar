@@ -198,14 +198,20 @@ public abstract class MinigameBase : MonoBehaviourPun
 
         if (PhotonNetwork.IsMasterClient)
         {
-            var gameRoomManager = FindAnyObjectByType<GameRoomManager>();
-            if (gameRoomManager != null)
+            var manager = FindAnyObjectByType<GameRoomManager>();
+            if (manager != null)
             {
-                if (winnerId != -1)
-                    gameRoomManager.photonView.RPC("NotifyWinnerToGameManager", RpcTarget.All, winnerId);
-                    
-                gameRoomManager.AssignNextTaskOwner();
-                gameRoomManager.photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, true);
+                if (manager.isMinigameMode)
+                {
+                    // Button wieder zeigen
+                    if (manager.masterMinigameButton != null) 
+                        manager.masterMinigameButton.SetActive(true);
+                }
+                else
+                {
+                    manager.AssignNextTaskOwner();
+                    manager.photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, true);
+                }
             }
             PhotonNetwork.Destroy(gameObject);
         }
