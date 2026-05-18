@@ -203,6 +203,12 @@ public abstract class MinigameBase : MonoBehaviourPun
             {
                 if (manager.isMinigameMode)
                 {
+                    // NEU: Gewinner einen Punkt im Arcade-Modus geben
+                    if (winnerId != -1)
+                    {
+                        // RPC an alle, um den Punktestand des Gewinners zu erhöhen
+                        manager.photonView.RPC("AddArcadeWinPoint", RpcTarget.All, winnerId);
+                    }
                     // Button wieder zeigen
                     if (manager.masterMinigameButton != null) 
                         manager.masterMinigameButton.SetActive(true);

@@ -400,4 +400,21 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         int nextOwner = players[(ownerIndex + 1) % players.Length].ActorNumber;
         PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { "TaskOwner", nextOwner }, { "TaskIndex", -1 }, { "TaskStatus", "waiting" } });
     }
+
+    [PunRPC]
+    public void AddArcadeWinPoint(int winnerActorId)
+    {
+        // Nur der Gewinner selbst (oder alle) erhöht seinen Total-Wert
+        if (PhotonNetwork.LocalPlayer.ActorNumber == winnerActorId)
+        {
+            int currentTotal = GetPlayerTotalPoints(PhotonNetwork.LocalPlayer);
+            int newTotal = currentTotal + 1; // 1 Punkt für den Sieg
+
+            Hashtable props = new Hashtable { { "TotalPoints", newTotal } };
+            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+            
+            // UI sofort aktualisieren
+            UpdateTotalPointsUI(PhotonNetwork.LocalPlayer.ActorNumber, newTotal);
+        }
+    }
 }
