@@ -492,6 +492,8 @@ MonoBehaviour:
   - Minispiel02_PrefabRoot
   - Minispiel03_PrefabRoot
   - Minispiel04_PrefabRoot
+  - Minispiel05_PrefabRoot
+  - Minispiel05_PrefabRoot
   masterMinigameButton: {fileID: 1780578487}
   aufgabenDatenbank: {fileID: 11400000, guid: 763ce69804df3714da8846aea27d99d4, type: 2}
 --- !u!4 &127997696
