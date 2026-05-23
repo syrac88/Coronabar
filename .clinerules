@@ -28,28 +28,29 @@ Autorität: Der MasterClient verwaltet den Spielstatus, den Minispiel-Loop und d
 - _Project/Resources/PhotonPrefabs – Minispiel-Prefabs für PhotonNetwork.Instantiate
 - _Project/Scenes – Lobby, GameRoom
 - _Project/Scripts/Core – GameRoomManager, LobbyManager, SceneLoader
-- _Project/Scripts/Minigames – MinigameBase, Minispiel01–06
+- _Project/Scripts/Minigames – MinigameBase, Minispiel01–07
 
 🎮 4. Minispiele (Übersicht)
 Alle Minispiele erben von MinigameBase und werden als Photon-Prefabs unter Resources/PhotonPrefabs/ instanziiert.
-Registriert in GameRoomManager.minigamePrefabs (Reihenfolge = Index 1–6):
+Registriert in GameRoomManager.minigamePrefabs (Reihenfolge = Index 1–7):
 1. Minispiel01_PrefabRoot – Klick-Zähler (Button in der Mitte)
 2. Minispiel02_PrefabRoot – Klick-Button wechselt X-Position (links/rechts)
 3. Minispiel03_PrefabRoot – Klick-Button zufällige X-Position
 4. Minispiel04_PrefabRoot – Klick-Button zufällige X/Y-Position
 5. Minispiel05_PrefabRoot – Mathe-Duell (einstellige Zahlen)
 6. Minispiel06_PrefabRoot – Mathe-Duell (zweistellige Zahlen für +/-; gemischt für 'x')
+7. Minispiel07_PrefabRoot – Mathe-Duell (dynamische Schriftgröße)
 
 Gemeinsamer Ablauf (MinigameBase.MinigameFlow):
 Vor-Countdown (3 s) → Spielphase (20 s, countdownTime) → EndActualGame() → GetLocalPlayerScore() → SubmitScore (RPC an Master) → ShowResults → CloseMinigame.
 Gewinner: Höchste Punktzahl (WinConditionType.HighestScoreWins), außer Child-Klasse überschreibt.
 
-📄 5. Minispiel05 – Mathe-Duell (Neu)
-Skript: Assets/_Project/Scripts/Minigames/Minispiel05.cs
-Prefab: Assets/_Project/Resources/PhotonPrefabs/Minispiel05_PrefabRoot.prefab
+📄 5. Minispiel07 – Mathe-Duell (Dynamische Schriftgröße)
+Skript: Assets/_Project/Scripts/Minigames/Minispiel07.cs
+Prefab: Assets/_Project/Resources/PhotonPrefabs/Minispiel07_PrefabRoot.prefab
 
 Spielkonzept:
-- Rechnen unter Zeitdruck: Aufgabe in der Mitte (Zahlen 1–10, Operatoren +, -, x).
+- Rechnen unter Zeitdruck: Aufgabe in der Mitte (Zahlen 1–99, Operatoren +, -, x).
 - 3 Antwort-Buttons mit je einer Zahl (eine richtig, zwei falsch).
 - Richtig klicken: +1 Punkt. Falsch klicken: -1 Punkt.
 - Nach jedem Klick sofort neue Aufgabe.
@@ -66,51 +67,20 @@ UI-Besonderheiten (Runtime-Generierung, wenig Inspector-Zuweisung):
 - SetGameplayUIVisible(bool): blendet Aufgabe, Punkte und alle 3 Buttons ein/aus.
 - EndActualGame(): SetGameplayUIVisible(false) – Aufgabe, Punkte und Buttons verschwinden bei „Auswertung…“.
 - StartActualGame() / SetupGame(): SetGameplayUIVisible(true).
+- Dynamische Schriftgröße: Die Schriftgröße der Aufgaben wird automatisch angepasst, um lange Fragen in einer Zeile darzustellen.
 
-Wichtige Methoden (Minispiel05):
+Wichtige Methoden (Minispiel07):
 | Methode | Beschreibung |
 | GenerateNewQuestion() | Zufällige Aufgabe + 3 gemischte Antworten |
 | OnAnswerButtonClicked() | Prüft Antwort, passt localScore an, neue Aufgabe |
 | EnsureGameUI() | Einmaliges Erzeugen von Texten und Buttons |
 | SetGameplayUIVisible() | Sichtbarkeit der Spiel-UI steuern |
 | GetLocalPlayerScore() | Gibt localScore als float zurück |
+| AdjustTextSize() | Passt die Schriftgröße dynamisch an die Länge der Frage an |
 
-📄 6. Minispiel06 – Mathe-Duell (Zwei-Digit-Variante)
-Skript: Assets/_Project/Scripts/Minigames/Minispiel06.cs
-Prefab: Assets/_Project/Resources/PhotonPrefabs/Minispiel06_PrefabRoot.prefab
-
-Spielkonzept:
-- Rechnen unter Zeitdruck: Aufgabe in der Mitte.
-- Addition/Subtraktion: Beide Zahlen sind zweistellig (10-99).
-- Multiplikation: Eine Zahl ist einstellig (1-9), die andere ist zweistellig (10-99).
-- 3 Antwort-Buttons mit je einer Zahl (eine richtig, zwei falsch).
-- Richtig klicken: +1 Punkt. Falsch klicken: -1 Punkt.
-- Nach jedem Klick sofort neue Aufgabe.
-- Subtraktion: größere Zahl minus kleinere (keine negativen Ergebnisse).
-- Am Ende: lokaler Score via GetLocalPlayerScore() an MasterClient (wie alle Minispiele).
-
-UI-Besonderheiten (Runtime-Generierung, wenig Inspector-Zuweisung):
-- Spiel-UI wird in EnsureGameUI() per Code unter minigamePanel erzeugt (Container „MatheDuellContainer“).
-- Legacy-Elemente aus dem kopierten Prefab (Button, TextCounter) werden in HideLegacyPrefabElements() ausgeblendet.
-- Layout von unten nach oben (Anker unten mittig):
-  - 3 Antwort-Buttons nebeneinander, braun, 55 px vom unteren Kartenrand.
-  - Aufgaben-Text 10 px über den Buttons (QuestionToButtonGap).
-  - Punkte-Anzeige 24 px über der Aufgabe (ScoreToQuestionGap).
-- SetGameplayUIVisible(bool): blendet Aufgabe, Punkte und alle 3 Buttons ein/aus.
-- EndActualGame(): SetGameplayUIVisible(false) – Aufgabe, Punkte und Buttons verschwinden bei „Auswertung…“.
-- StartActualGame() / SetupGame(): SetGameplayUIVisible(true).
-
-Wichtige Methoden (Minispiel06):
-| Methode | Beschreibung |
-| GenerateNewQuestion() | Zufällige Aufgabe + 3 gemischte Antworten (mit angepassten Zahlenbereichen) |
-| OnAnswerButtonClicked() | Prüft Antwort, passt localScore an, neue Aufgabe |
-| EnsureGameUI() | Einmaliges Erzeugen von Texten und Buttons |
-| SetGameplayUIVisible() | Sichtbarkeit der Spiel-UI steuern |
-| GetLocalPlayerScore() | Gibt localScore als float zurück |
-
-📄 7. Wichtige Skripte und ihre Funktionen
+📄 6. Wichtige Skripte und ihre Funktionen
 LobbyManager.cs: toggleMinigameMode – beim Raumerstellen in CustomRoomProperties (MinigameMode) speichern.
-GameRoomManager.cs: Zentrale Instanz. Start() prüft Modus, blendet aufgabenfeldInstance oder masterMinigameButton. Steuert minigameIndex und StartMinigame() via Photon. minigamePrefabs enthält alle 6 Minispiel-Prefab-Namen.
+GameRoomManager.cs: Zentrale Instanz. Start() prüft Modus, blendet aufgabenfeldInstance oder masterMinigameButton. Steuert minigameIndex und StartMinigame() via Photon. minigamePrefabs enthält alle 7 Minispiel-Prefab-Namen.
 MinigameBase.cs: Basis für Minispiele. CloseMinigame(): Arcade → masterMinigameButton + AddArcadeWinPoint; Normal → AssignNextTaskOwner + Aufgabenfeld.
 DebugMinigameStarter.cs: Debug-Panel (Taste 'M'), Dropdown aus manager.minigamePrefabs, OnStartButtonClicked() startet gewähltes Minispiel (nur MasterClient).
 InputFieldFocusHandler.cs: Behandelt den Fokus von InputFields, löscht Platzhaltertext bei Auswahl.
@@ -119,20 +89,20 @@ UI & Layout
 PlayerFrameBehaviour.cs: Glas-Button (lokale Punkte), Spieler-Infos.
 PlayerListAlternatingLayout.cs: Position der Spieler-Kacheln in der Bar.
 
-💡 8. Besonderheiten & Arcade-Modus
+💡 7. Besonderheiten & Arcade-Modus
 Modus-Umschaltung: Spielmodus Lobby → GameRoom über CustomRoomProperties (MinigameMode).
 Sicherheits-Logik: masterMinigameButton im Normal-Modus SetActive(false). MasterStartsNextMinigame() nur mit IsMasterClient.
 Arcade-Gewinn: AddArcadeWinPoint-RPC für den Minispiel-Gewinner.
 
-🛠 9. Entwickler-Tools & Debugging
-Debug-Panel: Taste 'M' (Editor/Debug-Build). Dropdown listet alle Einträge aus minigamePrefabs – inkl. Minispiel 06.
+🛠 8. Entwickler-Tools & Debugging
+Debug-Panel: Taste 'M' (Editor/Debug-Build). Dropdown listet alle Einträge aus minigamePrefabs – inkl. Minispiel 07.
 Logik-Validierung: Modus-Check in GameRoomManager.Start().
 Unity MCP: Console auslesen über Unity_GetConsoleLogs (Project Settings → AI → Unity MCP freigeben).
 
 Core & Manager
 | Datei | Funktion | Beschreibung |
 | GameRoomManager.cs | Start() | Initialisiert Bar, Modus-Prüfung, Spieler-UI |
-| GameRoomManager.cs | MasterStartsNextMinigame() | Nächstes Minispiel (Arcade), rotiert Index 0–5 |
+| GameRoomManager.cs | MasterStartsNextMinigame() | Nächstes Minispiel (Arcade), rotiert Index 0–6 |
 | GameRoomManager.cs | StartMinigame(int index) | Instanziiert PhotonPrefabs/MinispielXX_PrefabRoot |
 | GameRoomManager.cs | SetAufgabenfeldVisible() | RPC: Aufgabenfeld ein/aus |
 | GameRoomManager.cs | NotifyWinnerToGameManager() | RPC: VIP-Panel mit Sieger |
@@ -160,6 +130,10 @@ Minigames (Base & Logic)
 | Minispiel06.cs | EnsureGameUI() | Runtime-UI: Aufgabe, Punkte, 3 braune Antwort-Buttons |
 | Minispiel06.cs | GenerateNewQuestion() | Aufgabe + Antworten (zweistellig/gemischt); sofort nach Klick erneuern |
 | Minispiel06.cs | SetGameplayUIVisible() | Aufgabe, Punkte, Buttons bei Spielende ausblenden |
+| Minispiel07.cs | EnsureGameUI() | Runtime-UI: Aufgabe, Punkte, 3 braune Antwort-Buttons |
+| Minispiel07.cs | GenerateNewQuestion() | Aufgabe + Antworten; sofort nach Klick erneuern |
+| Minispiel07.cs | SetGameplayUIVisible() | Aufgabe, Punkte, Buttons bei Spielende ausblenden |
+| Minispiel07.cs | AdjustTextSize() | Passt die Schriftgröße dynamisch an die Länge der Frage an |
 
 UI & Hilfsklassen
 | Datei | Funktion | Beschreibung |
