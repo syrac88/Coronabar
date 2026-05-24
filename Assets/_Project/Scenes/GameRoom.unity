@@ -493,8 +493,9 @@ MonoBehaviour:
   - Minispiel03_PrefabRoot
   - Minispiel04_PrefabRoot
   - Minispiel05_PrefabRoot
-  - Minispiel05_PrefabRoot
+  - Minispiel06_PrefabRoot
   masterMinigameButton: {fileID: 1780578487}
+  isMinigameMode: 0
   aufgabenDatenbank: {fileID: 11400000, guid: 763ce69804df3714da8846aea27d99d4, type: 2}
 --- !u!4 &127997696
 Transform:
@@ -1314,7 +1315,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -712.4572, y: 461.33}
+  m_AnchoredPosition: {x: -712.4573, y: 461.33}
   m_SizeDelta: {x: -1424.9229, y: -922.66}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &449775963
