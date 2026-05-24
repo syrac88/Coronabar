@@ -38,8 +38,6 @@ Registriert in GameRoomManager.minigamePrefabs (Reihenfolge = Index 1–7):
 3. Minispiel03_PrefabRoot – Klick-Button zufällige X-Position
 4. Minispiel04_PrefabRoot – Klick-Button zufällige X/Y-Position
 5. Minispiel05_PrefabRoot – Mathe-Duell (einstellige Zahlen)
-6. Minispiel06_PrefabRoot – Mathe-Duell (zweistellige Zahlen für +/-; gemischt für 'x')
-7. Minispiel07_PrefabRoot – Mathe-Duell (dynamische Schriftgröße)
 
 Gemeinsamer Ablauf (MinigameBase.MinigameFlow):
 Vor-Countdown (3 s) → Spielphase (20 s, countdownTime) → EndActualGame() → GetLocalPlayerScore() → SubmitScore (RPC an Master) → ShowResults → CloseMinigame.
@@ -127,13 +125,7 @@ Minigames (Base & Logic)
 | Minispiel05.cs | EnsureGameUI() | Runtime-UI: Aufgabe, Punkte, 3 braune Antwort-Buttons |
 | Minispiel05.cs | GenerateNewQuestion() | Aufgabe + Antworten; sofort nach Klick erneuern |
 | Minispiel05.cs | SetGameplayUIVisible() | Aufgabe, Punkte, Buttons bei Spielende ausblenden |
-| Minispiel06.cs | EnsureGameUI() | Runtime-UI: Aufgabe, Punkte, 3 braune Antwort-Buttons |
-| Minispiel06.cs | GenerateNewQuestion() | Aufgabe + Antworten (zweistellig/gemischt); sofort nach Klick erneuern |
-| Minispiel06.cs | SetGameplayUIVisible() | Aufgabe, Punkte, Buttons bei Spielende ausblenden |
-| Minispiel07.cs | EnsureGameUI() | Runtime-UI: Aufgabe, Punkte, 3 braune Antwort-Buttons |
-| Minispiel07.cs | GenerateNewQuestion() | Aufgabe + Antworten; sofort nach Klick erneuern |
-| Minispiel07.cs | SetGameplayUIVisible() | Aufgabe, Punkte, Buttons bei Spielende ausblenden |
-| Minispiel07.cs | AdjustTextSize() | Passt die Schriftgröße dynamisch an die Länge der Frage an |
+
 
 UI & Hilfsklassen
 | Datei | Funktion | Beschreibung |
