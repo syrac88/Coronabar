@@ -201,16 +201,18 @@ public abstract class MinigameBase : MonoBehaviourPun
             var manager = FindAnyObjectByType<GameRoomManager>();
             if (manager != null)
             {
+                // VIP-Panel mit Gewinner anzeigen (bei allen Clients)
+                if (winnerId != -1)
+                    manager.photonView.RPC("NotifyWinnerToGameManager", RpcTarget.All, winnerId);
+
                 if (manager.isMinigameMode)
                 {
-                    // NEU: Gewinner einen Punkt im Arcade-Modus geben
+                    // Gewinner einen Punkt im Arcade-Modus geben
                     if (winnerId != -1)
-                    {
-                        // RPC an alle, um den Punktestand des Gewinners zu erhöhen
                         manager.photonView.RPC("AddArcadeWinPoint", RpcTarget.All, winnerId);
-                    }
+
                     // Button wieder zeigen
-                    if (manager.masterMinigameButton != null) 
+                    if (manager.masterMinigameButton != null)
                         manager.masterMinigameButton.SetActive(true);
                 }
                 else

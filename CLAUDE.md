@@ -45,9 +45,14 @@ Registriert in GameRoomManager.minigamePrefabs (Reihenfolge = Index 1–9):
 9. Minispiel09_PrefabRoot – Wahr oder Falsch (Fakten-Aussagen einordnen, WAHR/FALSCH-Buttons)
 
 Gemeinsamer Ablauf (MinigameBase.MinigameFlow):
-Vor-Countdown (3 s) → Spielphase → EndActualGame() → GetLocalPlayerScore() → SubmitScore (RPC an Master) → ShowResults → CloseMinigame.
+Vor-Countdown (3 s) → Spielphase → EndActualGame() → GetLocalPlayerScore() → SubmitScore (RPC an Master) → ShowResults → CloseMinigame → NotifyWinnerToGameManager (VIP-Panel).
 Spielzeit: Minispiel01–04 = 20 s / Minispiel05–09 = 30 s (countdownTime in SetupGame() gesetzt).
 Gewinner: Höchste Punktzahl (WinConditionType.HighestScoreWins), außer Child-Klasse überschreibt.
+
+VIP-Panel:
+- Nach jedem Minispiel ruft CloseMinigame() via RPC NotifyWinnerToGameManager(winnerId) auf.
+- GameRoomManager.NotifyWinnerToGameManager() setzt vipPanel.SetActive(true), zeigt Gewinnername + Charakterbild.
+- WICHTIG: NotifyWinnerToGameManager muss in CloseMinigame() aufgerufen werden – fehlt dieser Aufruf, bleibt das VIP-Panel stumm.
 
 📄 5. Minispiel07 – Quiz Allgemeinwissen (JSON-Datenbank)
 Skript: Assets/_Project/Scripts/Minigames/Minispiel07.cs
