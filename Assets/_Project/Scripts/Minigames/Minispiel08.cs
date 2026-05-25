@@ -23,17 +23,17 @@ public class Minispiel08 : MinigameBase
     private const float ButtonHeight      = 62f;
     private const float ButtonHalfGap     = 120f;   // halber Abstand (Mitte-zu-Mitte / 2)
     private const float ButtonRowGap      = 14f;    // vertikaler Abstand zwischen den Reihen
-    private const float BottomOffset      = 40f;    // 40px Pflichtabstand zum unteren Rand (Balken)
+    private const float BottomOffset      = 60f;    // 60px Pflichtabstand zum unteren Rand (Balken)
 
     // Berechnete Y-Positionen (Ankerpunkt = unten-mitte des Panels, pivot.y = 0)
     // Alle Werte = Abstand der Unterkante des Elements von der Panel-Unterkante
-    // Row1=40, Row2=116, Word=198, Score=312 → Score-Oberkante bei 352px
-    // Panel-Mitte liegt bei 267px von unten → Score-Oberkante bei +85 vom Zentrum
-    // InfoText-Unterkante liegt bei +101 vom Zentrum → 16px Luft ✓
-    private static float Row1Y  => BottomOffset;                         // 40
-    private static float Row2Y  => Row1Y + ButtonHeight + ButtonRowGap;  // 116
-    private static float WordY  => Row2Y + ButtonHeight + 20f;           // 198
-    private static float ScoreY => WordY + WordHeight  + 14f;            // 312
+    // Row1=60, Row2=136, Word=218, Score=332 → Score-Oberkante bei 372px
+    // Panel-Mitte liegt bei 267px von unten → Score-Oberkante bei +105 vom Zentrum
+    // InfoText-Unterkante liegt bei +101 vom Zentrum → passt knapp ✓
+    private static float Row1Y  => BottomOffset;                         // 60
+    private static float Row2Y  => Row1Y + ButtonHeight + ButtonRowGap;  // 136
+    private static float WordY  => Row2Y + ButtonHeight + 20f;           // 218
+    private static float ScoreY => WordY + WordHeight  + 14f;            // 332
 
     // ------------------------------------------------------------------ Farben
     private static readonly string[] ColorNames =
