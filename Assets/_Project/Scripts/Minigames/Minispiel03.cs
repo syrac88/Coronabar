@@ -18,7 +18,7 @@ public class Minispiel03 : MinigameBase
         localScore    = 0;
 
         if (textBeschreibung != null)
-            textBeschreibung.text = "Der Knopf springt zufällig – klicke ihn so oft du kannst!";
+            textBeschreibung.text = "Klicke so oft du kannst auf den roten Knopf!";
 
         clickButton.gameObject.SetActive(false);
         if (TextCounter != null) { TextCounter.gameObject.SetActive(false); TextCounter.text = "0"; }
