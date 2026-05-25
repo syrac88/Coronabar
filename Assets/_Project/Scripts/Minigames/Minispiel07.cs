@@ -72,7 +72,7 @@ public class Minispiel07 : MinigameBase
         randomSeed = seed;
     }
 
-    public new void TriggerMinigameStart()
+    public override void TriggerMinigameStart()
     {
         if (PhotonNetwork.IsMasterClient)
         {

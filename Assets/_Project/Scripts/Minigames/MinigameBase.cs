@@ -46,7 +46,7 @@ public abstract class MinigameBase : MonoBehaviourPun
             transform.SetParent(canvasTransform, false);
     }
 
-    public void TriggerMinigameStart()
+    public virtual void TriggerMinigameStart()
     {
         photonView.RPC(nameof(RpcStartMinigame), RpcTarget.All);
     }

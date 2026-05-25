@@ -78,7 +78,7 @@ public class Minispiel09 : MinigameBase
     // Wird vom GameRoomManager (oder einem anderen MasterClient-Aufruf) verwendet,
     // um Seed zu senden UND das Spiel gleichzeitig zu starten.
     // Da TriggerMinigameStart() nicht virtual ist, überschreiben wir es per 'new'.
-    public new void TriggerMinigameStart()
+    public override void TriggerMinigameStart()
     {
         if (PhotonNetwork.IsMasterClient)
         {
