@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Minispiel 5 - Mathe-Duell
+  m_text: Minispiel 7 - Quiz
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
   m_sharedMaterial: {fileID: 2140032, guid: dc36b3fdc14f47ebb36fd484a67e268a, type: 2}
@@ -284,9 +284,9 @@ GameObject:
   m_Component:
   - component: {fileID: 5517678858702808849}
   - component: {fileID: 4511928367089876828}
-  - component: {fileID: 3643357126220956418}
+  - component: {fileID: 6908936758351126306}
   m_Layer: 0
-  m_Name: Minispiel05_PrefabRoot
+  m_Name: Minispiel07_PrefabRoot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -330,7 +330,7 @@ MonoBehaviour:
   sceneViewId: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
---- !u!114 &3643357126220956418
+--- !u!114 &6908936758351126306
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -339,9 +339,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 3381849199763933166}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b7c4e91f2a3d64e58b1f0c9a7e5d4321, type: 3}
+  m_Script: {fileID: 11500000, guid: 0e4e9e23e3eb1ad4190c259cbf1f8ce8, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::Minispiel07
   minigamePanel: {fileID: 3733199983492051535}
   countdownText: {fileID: 7287006324473155162}
   infoText: {fileID: 2456680256875509981}
