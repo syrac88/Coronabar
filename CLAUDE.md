@@ -41,12 +41,26 @@ Registriert in GameRoomManager.minigamePrefabs (Reihenfolge = Index 1–8):
 6. Minispiel06_PrefabRoot – Mathe-Duell (zweistellig + Division)
 7. Minispiel07_PrefabRoot – Quiz: Allgemeinwissen (numerische Antworten, JSON-Datenbank)
 8. Minispiel08_PrefabRoot – Stroop-Effekt (Farbwort in anderer Farbe, Tintenfarbe tippen)
+9. Minispiel09_PrefabRoot – Wahr oder Falsch (Fakten-Aussagen einordnen, WAHR/FALSCH-Buttons)
 
 Gemeinsamer Ablauf (MinigameBase.MinigameFlow):
 Vor-Countdown (3 s) → Spielphase (20 s, countdownTime) → EndActualGame() → GetLocalPlayerScore() → SubmitScore (RPC an Master) → ShowResults → CloseMinigame.
 Gewinner: Höchste Punktzahl (WinConditionType.HighestScoreWins), außer Child-Klasse überschreibt.
 
-📄 5. Minispiel07 – Quiz Allgemeinwissen (JSON-Datenbank)
+📄 5. Minispiel09 – Wahr oder Falsch
+Skript: Assets/_Project/Scripts/Minigames/Minispiel09.cs
+Prefab: Assets/_Project/Resources/PhotonPrefabs/Minispiel09_PrefabRoot.prefab
+Daten: Assets/StreamingAssets/minispiel09_fragen.json
+
+Spielkonzept:
+- 35 lustige/absurde Fakten-Aussagen aus JSON-Datenbank.
+- 2 Buttons: WAHR (grün) und FALSCH (rot).
+- Richtig klicken: +1 Punkt. Falsch klicken: -1 Punkt.
+- Sofort neue Frage nach jedem Klick.
+- Seed-RPC-Pattern: MasterClient sendet Seed vor TriggerMinigameStart() → deterministische Fragereihenfolge auf allen Clients.
+- TriggerMinigameStart() per `new` überschrieben, sendet Seed-RPC vor base.TriggerMinigameStart().
+
+📄 6. Minispiel07 – Quiz Allgemeinwissen (JSON-Datenbank)
 Skript: Assets/_Project/Scripts/Minigames/Minispiel07.cs
 Prefab: Assets/_Project/Resources/PhotonPrefabs/Minispiel07_PrefabRoot.prefab
 Daten: Assets/StreamingAssets/minispiel07_fragen.json
