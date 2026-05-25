@@ -50,16 +50,20 @@ Spielzeit: Minispiel01–04 = 20 s / Minispiel05–09 = 30 s (countdownTime in S
 Gewinner: Höchste Punktzahl (WinConditionType.HighestScoreWins), außer Child-Klasse überschreibt.
 
 📐 Standardisiertes UI-Layout (alle Minispiele, Panel 880×535):
-Header (center-anchor, center-pivot, top-down):
-  TextMinispiel    h=50  y=+242.5  Spieltitel (fest im Prefab)
-  TextBeschreibung h=90  y=+172.5  Spielanweisung (Kind-Klasse setzt in SetupGame(), w=780, 50px L/R Rand)
-  CountdownText    h=54  y=+100.5  Countdown-Zahl (MinigameBase verwaltet)
-  TextScore        h=32  y= +57.5  "Punkte: X" (MinigameBase verwaltet via AddScore())
+Prefab-Objektnamen (wichtig – exakt so benannt!):
+  TextMinispiel, TextBeschreibung, TextCountdown, TextScore, TextResult (in Panelresults)
+
+Header (center-anchor, center-pivot, 6px Gap zwischen Elementen, top-down):
+  TextMinispiel    h=50  y=+242.5  fs=36  Spieltitel (fest im Prefab)         [485–535]
+  TextBeschreibung h=82  y=+170.5  fs=20  Spielanweisung (Kind setzt in SetupGame(), w=780)  [397–479]
+  TextCountdown    h=50  y= +98.5  fs=40  Countdown-Zahl (MinigameBase, autoSize=OFF)        [341–391]
+  TextScore        h=26  y= +54.5  fs=22  "Punkte: X" (MinigameBase via AddScore())          [309–335]
   -- Header gesamt: 226px --
 Spielbereich (~249px): Kind-Klasse, bottom-anchor, BottomOffset=60px
   Spielfeld-Obergrenze: 309px von Panel-Unterkante
 Bottom-Rahmen (60px): TextCloseCountdown -- "Schliesst in X..."
-ResultsPanel: overlay, sortierte Rangliste mit 🏆/🥇/🥈/🥉
+ResultsPanel (Panelresults): overlay, TextResult fs=18 autoSize=OFF NoWrap
+  Format: "-- ERGEBNISSE --\n\n1. Name: XX Pkt\n2. ..." (keine Emojis – Font unterstuetzt sie nicht)
 
 Score-System (MinigameBase):
   protected int localScore             -- zentrale Punkte-Variable
@@ -232,8 +236,11 @@ UI & Hilfsklassen
 - Mit JSON-Datenbank: Seed-RPC-Pattern (TriggerMinigameStart() per override).
 
 Layout-Regeln für Prefab-Header (alle Minispiele):
-- Header-Elemente: center-anchor, center-pivot, Y-Positionen gemäß Abschnitt 4 (TextMinispiel/TextBeschreibung/CountdownText/TextScore).
-- TextScore-Objekt: per Unity MCP mit SetRect(rt, (0, 57.5f), (400, 32)) anlegen und minigameBase.textScore binden.
+- Header-Elemente: center-anchor, center-pivot, 6px Gap zwischen Elementen (Positionen siehe Abschnitt 4).
+- WICHTIG: TextCountdown enableAutoSizing=false, fontSize=40 – sonst überlappt es benachbarte Elemente!
+- TextScore-Objekt: per Unity MCP anlegen (pos=(0,54.5), size=(400,26)) und minigameBase.textScore binden.
 - BottomOffset = 60px (Spielbereich-Untergrenze); Spielfeld-Obergrenze = 309px von Unterkante.
 - TextCloseCountdown bleibt im 60px-Rahmen; y_center = -267.5 + 60 + TextHöhe/2.
+- Ergebnisse: KEINE Emojis (Font unterstuetzt sie nicht) – stattdessen "1. 2. 3." als Prefix.
+- ResultsText (Objektname: "TextResult"): fontSize=18, autoSize=OFF, textWrappingMode=NoWrap.
 - Prefab per Unity MCP erstellen/anpassen (siehe Abschnitt 11).

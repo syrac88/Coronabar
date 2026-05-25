@@ -216,14 +216,13 @@ public abstract class MinigameBase : MonoBehaviourPun
         else
             sorted.Sort((a, b) => a.Value.CompareTo(b.Value));
 
-        string resultStr = "🏆  Ergebnisse\n\n";
+        string resultStr = "-- ERGEBNISSE --\n\n";
         for (int i = 0; i < sorted.Count; i++)
         {
             string pName = PhotonNetwork.CurrentRoom.GetPlayer(sorted[i].Key)?.NickName
                            ?? $"Spieler {sorted[i].Key}";
             int    pts   = Mathf.RoundToInt(sorted[i].Value);
-            string medal = i == 0 ? "🥇" : (i == 1 ? "🥈" : "🥉");
-            resultStr   += $"{medal}  {pName}:  {pts} Punkte\n";
+            resultStr   += $"{i + 1}. {pName}: {pts} Pkt\n";
         }
 
         photonView.RPC(nameof(ShowResults), RpcTarget.All, resultStr, winnerId);
