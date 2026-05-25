@@ -45,9 +45,39 @@ Registriert in GameRoomManager.minigamePrefabs (Reihenfolge = Index 1–9):
 9. Minispiel09_PrefabRoot – Wahr oder Falsch (Fakten-Aussagen einordnen, WAHR/FALSCH-Buttons)
 
 Gemeinsamer Ablauf (MinigameBase.MinigameFlow):
-Vor-Countdown (3 s) → Spielphase → EndActualGame() → GetLocalPlayerScore() → SubmitScore (RPC an Master) → ShowResults → CloseMinigame.
+Vor-Countdown (3 s) → Spielphase → EndActualGame() → GetLocalPlayerScore() → SubmitScore (RPC an Master) → ShowResults → CloseMinigame → NotifyWinnerToGameManager (VIP-Panel).
 Spielzeit: Minispiel01–04 = 20 s / Minispiel05–09 = 30 s (countdownTime in SetupGame() gesetzt).
 Gewinner: Höchste Punktzahl (WinConditionType.HighestScoreWins), außer Child-Klasse überschreibt.
+
+📐 Standardisiertes UI-Layout (alle Minispiele, Panel 880×535):
+Prefab-Objektnamen (wichtig – exakt so benannt!):
+  TextMinispiel, TextBeschreibung, TextCountdown, TextScore, TextResult (in Panelresults)
+
+Header (center-anchor, center-pivot, 6px Gap zwischen Elementen, top-down):
+  TextMinispiel    h=50  y=+242.5  fs=36  Spieltitel (fest im Prefab)         [485–535]
+  TextBeschreibung h=82  y=+170.5  fs=20  Spielanweisung (Kind setzt in SetupGame(), w=780)  [397–479]
+  TextCountdown    h=50  y= +98.5  fs=40  Countdown-Zahl (MinigameBase, autoSize=OFF)        [341–391]
+  TextScore        h=26  y= +54.5  fs=22  "Punkte: X" (MinigameBase via AddScore())          [309–335]
+  -- Header gesamt: 226px --
+Spielbereich (~249px): Kind-Klasse, bottom-anchor, BottomOffset=60px
+  Spielfeld-Obergrenze: 309px von Panel-Unterkante
+Bottom-Rahmen (60px): TextCloseCountdown -- "Schliesst in X..."
+ResultsPanel (Panelresults): overlay, TextResult fs=18 autoSize=OFF NoWrap
+  Format: "-- ERGEBNISSE --\n\n1. Name: XX Pkt\n2. ..." (keine Emojis – Font unterstuetzt sie nicht)
+
+Score-System (MinigameBase):
+  protected int localScore             -- zentrale Punkte-Variable
+  protected void AddScore(int delta)   -- aendert localScore + TextScore-UI
+  virtual float GetLocalPlayerScore()  -- gibt localScore zurueck (ueberschreibbar)
+  WICHTIG: Kein UpdateScoreDisplay() in Kind-Klassen noetig.
+
+VIP-Panel:
+- CloseMinigame() ruft via RPC NotifyWinnerToGameManager(winnerId) auf (alle Clients).
+- WICHTIG: Fehlt dieser Aufruf, bleibt das VIP-Panel stumm.
+
+MinigameBase-Felder (Prefab-Zuweisungen):
+  minigamePanel, textBeschreibung [FormerlySerializedAs "infoText"], countdownText,
+  textScore (NEU), resultsPanel, resultsText, TextCloseCountdown
 
 📄 5. Minispiel07 – Quiz Allgemeinwissen (JSON-Datenbank)
 Skript: Assets/_Project/Scripts/Minigames/Minispiel07.cs
@@ -73,17 +103,14 @@ Spielkonzept:
 - Richtig: +1 Punkt. Falsch: -1 Punkt. Sofort neue Runde nach jedem Klick.
 - 5 Farben: ROT, BLAU, GRÜN, GELB, LILA.
 
-UI-Layout (Runtime-Generierung):
-- Feste Prefab-Elemente (oben): Titel → Countdown → InfoText (kompakt, je ~36–60 px hoch)
-- Runtime-Elemente (unten, Anker = Panel-Unterkante): Score → Stroop-Wort → Button-Reihe 2 → Button-Reihe 1
+UI-Layout (Runtime-Generierung, Spielbereich):
+- Score-Anzeige liegt im Prefab-Header (textScore) – KEIN runtime-scoreText mehr.
+- Runtime-Elemente (Spielbereich, bottom-anchor): Stroop-Wort → Button-Reihe 2 → Button-Reihe 1
 - BottomOffset = 60px (Pflichtabstand zum unteren Rand für den Balken unter der Karte)
-- TextCloseCountdown: Unterkante bei 60px vom Rand → y_center = -Panel_Halbhöhe + 60 + TextHöhe/2
+- WordHeight = 90px (reduziert, damit im 249px-Spielfeld Platz bleibt)
 
 Layout-Formel (Y-Positionen, Anker unten-mitte, pivot.y=0):
-  Row1Y  = BottomOffset            (= 60)
-  Row2Y  = Row1Y + ButtonH + Gap   (= 136)
-  WordY  = Row2Y + ButtonH + 20    (= 218)
-  ScoreY = WordY + WordH + 14      (= 332)
+  Row1Y = 60   Row2Y = 136   WordY = 218   (Word-Oberkante bei 308px < 309px Spielfeld-Grenze)
 
 📄 7. Minispiel09 – Wahr oder Falsch
 Skript: Assets/_Project/Scripts/Minigames/Minispiel09.cs
@@ -101,7 +128,7 @@ Spielkonzept:
 📄 8. Wichtige Skripte und ihre Funktionen
 LobbyManager.cs: toggleMinigameMode – beim Raumerstellen in CustomRoomProperties (MinigameMode) speichern.
 GameRoomManager.cs: Zentrale Instanz. Start() prüft Modus, blendet aufgabenfeldInstance oder masterMinigameButton. Steuert minigameIndex und StartMinigame() via Photon. minigamePrefabs enthält alle 9 Minispiel-Prefab-Namen.
-MinigameBase.cs: Basis für Minispiele. CloseMinigame(): Arcade → masterMinigameButton + AddArcadeWinPoint; Normal → AssignNextTaskOwner + Aufgabenfeld.
+MinigameBase.cs: Basis für Minispiele. AddScore(delta) → localScore + textScore-UI. CloseMinigame(): NotifyWinnerToGameManager → Arcade/Normal-Logik.
 DebugMinigameStarter.cs: Debug-Panel (Taste 'M'), Dropdown aus manager.minigamePrefabs, OnStartButtonClicked() startet gewähltes Minispiel (nur MasterClient).
 InputFieldFocusHandler.cs: Behandelt den Fokus von InputFields, löscht Platzhaltertext bei Auswahl.
 
@@ -176,11 +203,12 @@ Minigames (Base & Logic)
 | MinigameBase.cs | MinigameFlow() | Countdown → Spiel → Auswertung → Ergebnisse |
 | MinigameBase.cs | SubmitScore() | RPC: Score an MasterClient |
 | MinigameBase.cs | ShowResults() | RPC: Ergebnis-Tabelle |
-| MinigameBase.cs | CloseMinigame() | Arcade-Button oder nächste Aufgabe; Destroy |
-| Minispiel01–04.cs | SetupGame / StartActualGame / EndActualGame / GetLocalPlayerScore | Klick-Minispiele mit Inspector-UI (Button, TextCounter) |
-| Minispiel05.cs | EnsureGameUI() | Runtime-UI: Aufgabe, Punkte, 3 braune Antwort-Buttons |
+| MinigameBase.cs | AddScore(int delta) | localScore ändern + textScore-UI aktualisieren |
+| MinigameBase.cs | CloseMinigame() | NotifyWinnerToGameManager → Arcade/Normal-Logik; Destroy |
+| Minispiel01–04.cs | SetupGame / StartActualGame / EndActualGame | Klick-Minispiele; rufen AddScore(1) auf |
+| Minispiel05.cs | EnsureGameUI() | Runtime-UI: Aufgabe + 3 braune Antwort-Buttons (kein scoreText) |
 | Minispiel05.cs | GenerateNewQuestion() | Aufgabe + Antworten; sofort nach Klick erneuern |
-| Minispiel05.cs | SetGameplayUIVisible() | Aufgabe, Punkte, Buttons bei Spielende ausblenden |
+| Minispiel05.cs | SetGameplayUIVisible() | Aufgabe + Buttons bei Spielende ausblenden |
 | Minispiel06.cs | GenerateNewQuestion() | Wie 05, aber zweistellig + Division |
 | Minispiel07.cs | TriggerMinigameStart() (new) | Seed-RPC senden, dann base aufrufen |
 | Minispiel07.cs | LoadQuestions() / ShuffleQuestions() | JSON laden, per Seed mischen |
@@ -200,21 +228,19 @@ UI & Hilfsklassen
 🔧 13. Konventionen für neue Minispiele
 - Von MinigameBase erben, abstrakte Methoden implementieren.
 - Prefab unter Resources/PhotonPrefabs/ mit PhotonView; Name in GameRoomManager.minigamePrefabs (Code-Default) UND in der GameRoom-Szene (Inspector) ergänzen.
-- Prefab muss minigamePanel, countdownText, infoText, resultsPanel, resultsText, TextCloseCountdown zuweisen (MinigameBase-Felder).
-- Score lokal zählen, am Ende nur GetLocalPlayerScore() – Synchronisation über MinigameBase.SubmitScore.
-- Bei Runtime-UI: Legacy-Prefab-Elemente ausblenden; EndActualGame() Spiel-UI verstecken, wenn Ergebnis-Panel kommt.
+- Prefab muss minigamePanel, textBeschreibung, countdownText, textScore, resultsPanel, resultsText, TextCloseCountdown zuweisen.
+- Score: AddScore(+1/-1) aufrufen – kein eigenes localScore-Feld, kein UpdateScoreDisplay() nötig.
+- textBeschreibung.text in SetupGame() setzen (nicht StartActualGame).
+- Bei Runtime-UI: Legacy-Elemente (Button, TextCounter) ausblenden; kein scoreText im Spielbereich erstellen.
 - Spielzeit: countdownTime = 30f in SetupGame() setzen (Standard-Minispiele 05–09).
-- Mit JSON-Datenbank: Seed-RPC-Pattern verwenden (TriggerMinigameStart() per `new` überschreiben).
+- Mit JSON-Datenbank: Seed-RPC-Pattern (TriggerMinigameStart() per override).
 
-Layout-Regeln für Runtime-UI (gelernt Minispiel05–09):
-- WICHTIG: Unterer Rand = 60px freilassen (physischer Balken unterhalb der Spielkarte).
-- TextCloseCountdown-Formel: y_center = -(Panel_Halbhöhe) + 60 + (TextHöhe/2)
-  → Bei Panel 535px hoch: y = -267.6 + 60 + 20 = -188
-- Feste Prefab-Elemente (Titel, Countdown, InfoText) OBEN kompakt anordnen:
-  Titel y≈248 (h≈38), Countdown y≈183 (h≈60), InfoText y≈110 (h≈44)
-  Dadurch bleibt der untere Bereich für Runtime-Elemente frei.
-- Runtime-Elemente von unten nach oben aufbauen (anchorMin/Max=(0.5,0), pivot=(0.5,0)):
-  BottomOffset=60 → Row1 → Row2 → Spielelement → Score
-- InfoText in StartActualGame() überschreiben (nicht SetupGame, dort überschreibt die Base-Klasse es wieder).
-- Prefab per Unity MCP erstellen (siehe Abschnitt 11) – kein manuelles Klicken nötig.
-- ButtonBottomOffset = 60f (nicht 55f!) in allen Runtime-UI-Minispielen.
+Layout-Regeln für Prefab-Header (alle Minispiele):
+- Header-Elemente: center-anchor, center-pivot, 6px Gap zwischen Elementen (Positionen siehe Abschnitt 4).
+- WICHTIG: TextCountdown enableAutoSizing=false, fontSize=40 – sonst überlappt es benachbarte Elemente!
+- TextScore-Objekt: per Unity MCP anlegen (pos=(0,54.5), size=(400,26)) und minigameBase.textScore binden.
+- BottomOffset = 60px (Spielbereich-Untergrenze); Spielfeld-Obergrenze = 309px von Unterkante.
+- TextCloseCountdown bleibt im 60px-Rahmen; y_center = -267.5 + 60 + TextHöhe/2.
+- Ergebnisse: KEINE Emojis (Font unterstuetzt sie nicht) – stattdessen "1. 2. 3." als Prefix.
+- ResultsText (Objektname: "TextResult"): fontSize=18, autoSize=OFF, textWrappingMode=NoWrap.
+- Prefab per Unity MCP erstellen/anpassen (siehe Abschnitt 11).

@@ -2,38 +2,98 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Photon.Pun;
 using Photon.Realtime;
 
 public enum WinConditionType
 {
     HighestScoreWins,
-    LowestScoreWins // Z.B. für Rennen auf Zeit
+    LowestScoreWins
 }
 
+/// <summary>
+/// Basis-Klasse für alle Minispiele.
+///
+/// LAYOUT (top-down, Panel 880×535):
+///   TextMinispiel    50px  – Spieltitel, fest im Prefab gesetzt
+///   TextBeschreibung 90px  – Spielanweisung, Kind-Klasse setzt in SetupGame()
+///   CountdownText    54px  – Countdown-Anzeige (Base verwaltet)
+///   TextScore        32px  – "Punkte: X" (Base verwaltet via AddScore())
+///   ── 226px Header gesamt ──
+///   SPIELBEREICH    ~249px – Kind-Klasse (BottomOffset=60 bleibt)
+///   ── 60px Rahmen unten ──
+///   TextCloseCountdown – auf dem Rahmen: "Schließt in X…"
+///
+/// SCORE-SYSTEM:
+///   protected int localScore          – zentrale Punkte-Variable
+///   protected void AddScore(int delta) – Punkte ändern + TextScore-UI updaten
+///   virtual float GetLocalPlayerScore() – gibt localScore zurück (überschreibbar)
+/// </summary>
 public abstract class MinigameBase : MonoBehaviourPun
 {
+    // ── Header-Felder (alle im Prefab verankert) ─────────────────────────
     [Header("Basis UI Elemente")]
     public GameObject minigamePanel;
-    public TMP_Text countdownText;
-    public TMP_Text infoText;
-    public GameObject resultsPanel;
-    public TMP_Text resultsText;
-    public TMP_Text TextCloseCountdown;
 
+    /// <summary>
+    /// Spielanweisung – von der Kind-Klasse in SetupGame() gesetzt.
+    /// [FormerlySerializedAs] stellt sicher, dass alte Prefabs mit "infoText"
+    /// weiterhin korrekt gebunden werden.
+    /// </summary>
+    [FormerlySerializedAs("infoText")]
+    public TMP_Text textBeschreibung;
+
+    public TMP_Text countdownText;
+
+    /// <summary>
+    /// "Punkte: X" – wird von AddScore() automatisch aktualisiert.
+    /// Muss im Prefab als "TextScore"-Objekt unter minigamePanel liegen.
+    /// </summary>
+    public TMP_Text textScore;
+
+    public GameObject resultsPanel;
+    public TMP_Text   resultsText;
+    public TMP_Text   TextCloseCountdown;
+
+    // ── Interne Felder ────────────────────────────────────────────────────
     protected float countdownTime = 20f;
-    protected bool gameRunning = false;
+    protected bool  gameRunning   = false;
+    protected int   localScore    = 0;
+
     private Dictionary<int, float> playerScores = new Dictionary<int, float>();
     private Transform canvasTransform;
 
-    // ----- ABSTRAKTE METHODEN (Müssen von den Spielen überschrieben werden) -----
-    protected abstract void SetupGame();
-    protected abstract void StartActualGame();
-    protected abstract void EndActualGame();
-    protected abstract float GetLocalPlayerScore();
+    // ── Abstrakte Methoden ────────────────────────────────────────────────
 
-    // Standardmäßig gewinnt die höchste Punktzahl. Für Rennspiele in der Child-Klasse überschreiben!
+    /// <summary>Vorbereitung: textBeschreibung setzen, Spiel-UI aufbauen.</summary>
+    protected abstract void SetupGame();
+
+    /// <summary>Interaktion freischalten (Buttons aktiv).</summary>
+    protected abstract void StartActualGame();
+
+    /// <summary>Interaktion sperren, Spiel-UI ausblenden.</summary>
+    protected abstract void EndActualGame();
+
+    /// <summary>Finaler Score. Standard gibt localScore zurück.</summary>
+    protected virtual float GetLocalPlayerScore() => localScore;
+
     public virtual WinConditionType WinCondition => WinConditionType.HighestScoreWins;
+
+    // ── Score-Hilfsmethode ────────────────────────────────────────────────
+
+    /// <summary>
+    /// Addiert delta zu localScore und aktualisiert das TextScore-Feld.
+    /// Aufruf aus Kind-Klassen: AddScore(+1) oder AddScore(-1).
+    /// </summary>
+    protected void AddScore(int delta)
+    {
+        localScore += delta;
+        if (textScore != null)
+            textScore.text = $"Punkte: {localScore}";
+    }
+
+    // ── Unity-Lifecycle ───────────────────────────────────────────────────
 
     protected virtual void Awake()
     {
@@ -45,6 +105,8 @@ public abstract class MinigameBase : MonoBehaviourPun
         if (canvasTransform != null)
             transform.SetParent(canvasTransform, false);
     }
+
+    // ── Photon-Einstiegspunkt ─────────────────────────────────────────────
 
     public virtual void TriggerMinigameStart()
     {
@@ -59,104 +121,114 @@ public abstract class MinigameBase : MonoBehaviourPun
 
         minigamePanel.SetActive(true);
         resultsPanel.SetActive(false);
-        
-        SetupGame(); // Child-Klasse bereitet sich vor
+
+        // Header zurücksetzen
+        localScore = 0;
+        if (textScore        != null) textScore.text        = "Punkte: 0";
+        if (textBeschreibung != null) textBeschreibung.text = "";
+        if (countdownText    != null) countdownText.text    = "";
+
+        SetupGame();
         StartCoroutine(MinigameFlow());
     }
+
+    // ── Hauptablauf ───────────────────────────────────────────────────────
 
     private IEnumerator MinigameFlow()
     {
         playerScores.Clear();
-        infoText.text = "Bereit... gleich geht's los!";
-        countdownText.text = "";
 
-        // 1. Vor-Countdown (3 Sekunden)
-        float preCountdown = 3f; // Reduziert von 10f auf 3f (10 war in deinem Code, oft zu lang für Minispiele)
+        // 1. Vor-Countdown (3 s) — textBeschreibung ist jetzt bereits von SetupGame() gesetzt
+        float preCountdown = 3f;
         while (preCountdown > 0)
         {
-            countdownText.text = Mathf.Ceil(preCountdown).ToString();
-            preCountdown -= Time.deltaTime;
+            countdownText.text  = Mathf.Ceil(preCountdown).ToString();
+            preCountdown       -= Time.deltaTime;
             yield return null;
         }
 
-        infoText.text = (WinCondition == WinConditionType.HighestScoreWins) 
-            ? $"Die meisten Punkte in {countdownTime} Sekunden gewinnen!" 
-            : $"Die schnellste Zeit gewinnt!";
-            
-        countdownText.text = countdownTime.ToString();
+        countdownText.text = countdownTime.ToString("F0");
 
-        // 2. Spiel startet lokal
+        // 2. Spiel startet
         gameRunning = true;
-        StartActualGame(); // Child-Klasse schaltet z.B. Buttons frei
+        StartActualGame();
 
         // 3. Haupt-Countdown
         float timer = countdownTime;
         while (timer > 0)
         {
-            timer -= Time.deltaTime;
-            countdownText.text = Mathf.Ceil(timer).ToString();
+            timer              -= Time.deltaTime;
+            countdownText.text  = Mathf.Ceil(timer).ToString();
             yield return null;
         }
 
-        // 4. Spiel beenden lokal
+        // 4. Spiel beenden
         gameRunning = false;
-        EndActualGame(); // Child-Klasse blockiert Eingaben
-        
-        infoText.text = "Auswertung...";
+        EndActualGame();
+
         countdownText.text = "0";
+        if (textBeschreibung != null)
+            textBeschreibung.text = "Zeit ist um – Auswertung läuft…";
 
-        // 5. Punkte an MasterClient senden
+        // 5. Score an MasterClient senden
         float finalScore = GetLocalPlayerScore();
-        photonView.RPC(nameof(SubmitScore), RpcTarget.MasterClient, PhotonNetwork.LocalPlayer.ActorNumber, finalScore);
+        photonView.RPC(nameof(SubmitScore), RpcTarget.MasterClient,
+            PhotonNetwork.LocalPlayer.ActorNumber, finalScore);
 
-        // 6. MasterClient wertet aus
-        if (PhotonNetwork.IsMasterClient)
+        // 6. Auswertung (nur auf MasterClient)
+        if (!PhotonNetwork.IsMasterClient) yield break;
+
+        playerScores[PhotonNetwork.LocalPlayer.ActorNumber] = finalScore;
+
+        float waitTimeout = 10f;
+        float elapsed     = 0f;
+        int   playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
+
+        while (playerScores.Count < playerCount && elapsed < waitTimeout)
         {
-            playerScores[PhotonNetwork.LocalPlayer.ActorNumber] = finalScore;
-
-            float waitTimeout = 10f;
-            float elapsed = 0f;
-            int playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
-            
-            while (playerScores.Count < playerCount && elapsed < waitTimeout)
-            {
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-
-            if (playerScores.Count == 0)
-            {
-                photonView.RPC(nameof(ShowResults), RpcTarget.All, "Keine Daten erhalten!", -1);
-            }
-            else
-            {
-                float bestScore = (WinCondition == WinConditionType.HighestScoreWins) ? float.MinValue : float.MaxValue;
-                int winnerId = -1;
-
-                foreach (var kvp in playerScores)
-                {
-                    bool isBetter = (WinCondition == WinConditionType.HighestScoreWins) ? kvp.Value > bestScore : kvp.Value < bestScore;
-                    if (isBetter)
-                    {
-                        bestScore = kvp.Value;
-                        winnerId = kvp.Key;
-                    }
-                }
-
-                string winnerName = PhotonNetwork.CurrentRoom.GetPlayer(winnerId)?.NickName ?? "Unbekannt";
-                string resultStr = "Ergebnisse:\n";
-
-                foreach (var kvp in playerScores)
-                {
-                    string name = PhotonNetwork.CurrentRoom.GetPlayer(kvp.Key)?.NickName ?? $"Spieler {kvp.Key}";
-                    resultStr += $"{name}: {Mathf.RoundToInt(kvp.Value)}\n"; // Aktuell Runden wir auf ganze Zahlen für Anzeige
-                }
-                resultStr += $"\nGewinner: {winnerName}";
-
-                photonView.RPC(nameof(ShowResults), RpcTarget.All, resultStr, winnerId);
-            }
+            elapsed += Time.deltaTime;
+            yield return null;
         }
+
+        if (playerScores.Count == 0)
+        {
+            photonView.RPC(nameof(ShowResults), RpcTarget.All, "Keine Daten erhalten!", -1);
+            yield break;
+        }
+
+        // Gewinner ermitteln
+        float bestScore = (WinCondition == WinConditionType.HighestScoreWins)
+            ? float.MinValue : float.MaxValue;
+        int winnerId = -1;
+
+        foreach (var kvp in playerScores)
+        {
+            bool isBetter = (WinCondition == WinConditionType.HighestScoreWins)
+                ? kvp.Value > bestScore
+                : kvp.Value < bestScore;
+            if (isBetter) { bestScore = kvp.Value; winnerId = kvp.Key; }
+        }
+
+        // Sortierte Rangliste aufbauen
+        var sorted = new List<KeyValuePair<int, float>>(playerScores);
+        if (WinCondition == WinConditionType.HighestScoreWins)
+            sorted.Sort((a, b) => b.Value.CompareTo(a.Value));
+        else
+            sorted.Sort((a, b) => a.Value.CompareTo(b.Value));
+
+        string resultStr = "-- ERGEBNISSE --\n\n";
+        for (int i = 0; i < sorted.Count; i++)
+        {
+            string pName = PhotonNetwork.CurrentRoom.GetPlayer(sorted[i].Key)?.NickName
+                           ?? $"Spieler {sorted[i].Key}";
+            int    pts   = Mathf.RoundToInt(sorted[i].Value);
+            resultStr   += $"{i + 1}. {pName}: {pts} Pkt\n";
+        }
+
+        photonView.RPC(nameof(ShowResults), RpcTarget.All, resultStr, winnerId);
     }
+
+    // ── RPCs ──────────────────────────────────────────────────────────────
 
     [PunRPC]
     public void SubmitScore(int actorNumber, float score, PhotonMessageInfo info)
@@ -168,12 +240,15 @@ public abstract class MinigameBase : MonoBehaviourPun
     [PunRPC]
     public void ShowResults(string resultString, int winnerId)
     {
-        infoText.text = "Minispiel beendet!";
+        // Header bereinigen
+        if (textBeschreibung != null) textBeschreibung.text = "";
+        if (textScore        != null) textScore.text        = "";
+        countdownText.text = "";
+
         resultsText.text = resultString;
         resultsPanel.SetActive(true);
-        countdownText.text = "";
-        
-        StartCoroutine(CloseAfterDelay(10f, winnerId)); // 10 Sek Anzeige reicht meistens
+
+        StartCoroutine(CloseAfterDelay(10f, winnerId));
     }
 
     private IEnumerator CloseAfterDelay(float delay, int winnerId)
@@ -183,7 +258,8 @@ public abstract class MinigameBase : MonoBehaviourPun
 
         while (t > 0f)
         {
-            if (TextCloseCountdown != null) TextCloseCountdown.text = $"Schließt in {Mathf.CeilToInt(t)}...";
+            if (TextCloseCountdown != null)
+                TextCloseCountdown.text = $"Schließt in {Mathf.CeilToInt(t)}…";
             t -= Time.deltaTime;
             yield return null;
         }
@@ -196,30 +272,33 @@ public abstract class MinigameBase : MonoBehaviourPun
         minigamePanel.SetActive(false);
         resultsPanel.SetActive(false);
 
-        if (PhotonNetwork.IsMasterClient)
+        if (!PhotonNetwork.IsMasterClient) return;
+
+        var manager = FindAnyObjectByType<GameRoomManager>();
+        if (manager == null)
         {
-            var manager = FindAnyObjectByType<GameRoomManager>();
-            if (manager != null)
-            {
-                if (manager.isMinigameMode)
-                {
-                    // NEU: Gewinner einen Punkt im Arcade-Modus geben
-                    if (winnerId != -1)
-                    {
-                        // RPC an alle, um den Punktestand des Gewinners zu erhöhen
-                        manager.photonView.RPC("AddArcadeWinPoint", RpcTarget.All, winnerId);
-                    }
-                    // Button wieder zeigen
-                    if (manager.masterMinigameButton != null) 
-                        manager.masterMinigameButton.SetActive(true);
-                }
-                else
-                {
-                    manager.AssignNextTaskOwner();
-                    manager.photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, true);
-                }
-            }
             PhotonNetwork.Destroy(gameObject);
+            return;
         }
+
+        // VIP-Panel bei allen Clients zeigen
+        if (winnerId != -1)
+            manager.photonView.RPC("NotifyWinnerToGameManager", RpcTarget.All, winnerId);
+
+        if (manager.isMinigameMode)
+        {
+            if (winnerId != -1)
+                manager.photonView.RPC("AddArcadeWinPoint", RpcTarget.All, winnerId);
+
+            if (manager.masterMinigameButton != null)
+                manager.masterMinigameButton.SetActive(true);
+        }
+        else
+        {
+            manager.AssignNextTaskOwner();
+            manager.photonView.RPC("SetAufgabenfeldVisible", RpcTarget.All, true);
+        }
+
+        PhotonNetwork.Destroy(gameObject);
     }
 }
