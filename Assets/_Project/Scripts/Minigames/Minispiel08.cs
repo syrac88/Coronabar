@@ -248,6 +248,9 @@ public class Minispiel08 : MinigameBase
 
     private TMP_FontAsset ResolveFont()
     {
+        // LiberationSans SDF direkt laden – einzige Font mit vollständigem Umlaut-Support (z.B. GRÜN)
+        var lib = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+        if (lib != null) return lib;
         if (infoText      != null && infoText.font      != null) return infoText.font;
         if (countdownText != null && countdownText.font != null) return countdownText.font;
         return TMP_Settings.defaultFontAsset;
