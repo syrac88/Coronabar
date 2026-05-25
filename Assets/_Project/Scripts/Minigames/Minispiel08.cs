@@ -72,6 +72,7 @@ public class Minispiel08 : MinigameBase
 
     protected override void SetupGame()
     {
+        countdownTime      = 30f;
         localScore         = 0;
         buttonColorIndices = new int[AnswerButtonCount];
 

@@ -42,6 +42,7 @@ public class Minispiel05 : MinigameBase
 
     protected override void SetupGame()
     {
+        countdownTime = 30f;
         localScore = 0;
         HideLegacyPrefabElements();
         EnsureGameUI();

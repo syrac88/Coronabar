@@ -92,8 +92,9 @@ public class Minispiel09 : MinigameBase
 
     protected override void SetupGame()
     {
-        localScore   = 0;
-        currentIndex = 0;
+        countdownTime = 30f;
+        localScore    = 0;
+        currentIndex  = 0;
 
         LoadQuestions();
         ShuffleQuestions();
