@@ -12,7 +12,7 @@ public class Minispiel05 : MinigameBase
     private const int AnswerButtonCount = 3;
     private const int MinNumber = 1;
     private const int MaxNumber = 10;
-    private const float ButtonBottomOffset = 55f;
+    private const float ButtonBottomOffset = 60f;  // 60px Pflichtabstand zum unteren Rand (Balken)
     private const float ButtonWidth = 175f;
     private const float ButtonHeight = 58f;
     private const float ButtonHorizontalSpacing = 195f;
