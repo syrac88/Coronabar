@@ -34,7 +34,9 @@ public class GameRoomManager : MonoBehaviourPunCallbacks
         "Minispiel03_PrefabRoot",
         "Minispiel04_PrefabRoot",
         "Minispiel05_PrefabRoot",
-        "Minispiel06_PrefabRoot"
+        "Minispiel06_PrefabRoot",
+        "Minispiel07_PrefabRoot",
+        "Minispiel08_PrefabRoot"
     };
 
     private int minigameIndex = 0; // Wir starten jetzt logisch bei Index 0
