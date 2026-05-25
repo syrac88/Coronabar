@@ -14,21 +14,26 @@ public class Minispiel08 : MinigameBase
     private const int   ColorCount        = 5;
     private const int   AnswerButtonCount = 4;
 
-    private const float WordFontSize      = 84f;
-    private const float ScoreFontSize     = 30f;
-    private const float ScoreHeight       = 46f;
+    private const float WordFontSize      = 80f;
+    private const float WordHeight        = 100f;
+    private const float ScoreFontSize     = 28f;
+    private const float ScoreHeight       = 40f;
 
     private const float ButtonWidth       = 215f;
     private const float ButtonHeight      = 62f;
     private const float ButtonHalfGap     = 120f;   // halber Abstand (Mitte-zu-Mitte / 2)
     private const float ButtonRowGap      = 14f;    // vertikaler Abstand zwischen den Reihen
-    private const float BottomOffset      = 66f;    // gleich wie Minispiel07
+    private const float BottomOffset      = 40f;    // 40px Pflichtabstand zum unteren Rand (Balken)
 
-    // Berechnete Y-Positionen (Ankerpunkt = unten-mitte, pivot.y = 0)
-    private static float Row1Y  => BottomOffset;
-    private static float Row2Y  => Row1Y + ButtonHeight + ButtonRowGap;
-    private static float WordY  => Row2Y + ButtonHeight + 36f;
-    private static float ScoreY => WordY + 110f + 16f;
+    // Berechnete Y-Positionen (Ankerpunkt = unten-mitte des Panels, pivot.y = 0)
+    // Alle Werte = Abstand der Unterkante des Elements von der Panel-Unterkante
+    // Row1=40, Row2=116, Word=198, Score=312 → Score-Oberkante bei 352px
+    // Panel-Mitte liegt bei 267px von unten → Score-Oberkante bei +85 vom Zentrum
+    // InfoText-Unterkante liegt bei +101 vom Zentrum → 16px Luft ✓
+    private static float Row1Y  => BottomOffset;                         // 40
+    private static float Row2Y  => Row1Y + ButtonHeight + ButtonRowGap;  // 116
+    private static float WordY  => Row2Y + ButtonHeight + 20f;           // 198
+    private static float ScoreY => WordY + WordHeight  + 14f;            // 312
 
     // ------------------------------------------------------------------ Farben
     private static readonly string[] ColorNames =
@@ -138,7 +143,7 @@ public class Minispiel08 : MinigameBase
         wordText = CreateText(
             "WordText", gameContainer, font,
             WordFontSize, TextAlignmentOptions.Center,
-            new Vector2(0f, WordY), new Vector2(680f, 110f),
+            new Vector2(0f, WordY), new Vector2(680f, WordHeight),
             "FARBE", anchorToBottom: true);
         wordText.fontStyle = FontStyles.Bold;
 
